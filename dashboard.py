@@ -663,7 +663,7 @@ try:
         else:
             st.warning(result["message"])
 
-    if auto_mode and permit_long and stage == 4:
+    if auto_mode and permit_long and stage == 3:
         state.trade_mode = "AUTO"
         result = execute_trade(
             client,

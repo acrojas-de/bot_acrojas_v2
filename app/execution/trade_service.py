@@ -162,12 +162,20 @@ def execute_trade(
     reward = abs(take_profit - entry_price)
     rr_real = reward / risk if risk > 0 else 0
 
-    if rr_real < 1.5:
-        return {
-            "ok": False,
-            "message": f"Trade rechazado por RR insuficiente ({rr_real:.2f})",
-            "trade": None,
-        }
+    if getattr(state, "trade_mode", None) == "AUTO":
+        if rr_real < 1.2:
+            return {
+                "ok": False,
+                "message": f"Trade AUTO rechazado por RR insuficiente ({rr_real:.2f})",
+                "trade": None,
+            }
+    else:
+        if rr_real < 1.0:
+            return {
+                "ok": False,
+                "message": f"Trade MANUAL rechazado por RR insuficiente ({rr_real:.2f})",
+                "trade": None,
+            }
 
     trade = build_trade_record(
         symbol=symbol,
