@@ -599,6 +599,20 @@ try:
     # =========================================================
     exec1, exec2, exec3, exec4 = st.columns([1, 1, 1, 1])
 
+    # 🔥 MODO DE MERCADO (SPOT / FUTURES)
+    trade_mode_key = "trade_market_mode"
+    if trade_mode_key not in st.session_state:
+        st.session_state[trade_mode_key] = "SPOT"
+
+    market_mode = st.radio(
+        "⚙️ Modo de ejecución",
+        ["SPOT", "FUTURES"],
+        horizontal=True,
+        key=trade_mode_key,
+    )
+
+    st.caption(f"Modo activo: {market_mode}")
+
     with exec1:
         auto_mode = st.toggle("AUTO", value=st.session_state[auto_key], key=auto_key)
 
@@ -606,49 +620,81 @@ try:
         manual_long = st.button("🚀 Ejecutar LONG", width="stretch", disabled=False)
 
     with exec3:
-        manual_short = st.button("🔻 Ejecutar SHORT", width="stretch", disabled=not permit_short)
+        short_disabled = (market_mode == "SPOT") or (not permit_short)
+        manual_short = st.button("🔻 Ejecutar SHORT", width="stretch", disabled=short_disabled)
 
-    # 👇 👇 👇 AQUÍ VA TU BLOQUE
+    if market_mode == "SPOT":
+        st.info("🟢 Modo SPOT activo: solo operaciones LONG (compra real). SHORT estará disponible en FUTURES.")
+
+    # 👇 👇 👇 BLOQUE DE EJECUCIÓN
 
     open_positions = [t for t in state.open_trades if t.get("status") == "OPEN"]
     has_open_position = len(open_positions) > 0
-
 
     changed_history = False
 
     if manual_long:
         state.trade_mode = "MANUAL"
-        result = execute_trade(client, state, side="LONG", klines_df=df)
+        result = execute_trade(
+            client,
+            state,
+            side="LONG",
+            market_mode=market_mode,
+            klines_df=df,
+        )
         if result["ok"]:
             st.success(result["message"])
             changed_history = True
+        else:
+            st.warning(result["message"])
 
     if manual_short:
         state.trade_mode = "MANUAL"
-        result = execute_trade(client, state, side="SHORT", klines_df=df)
+        result = execute_trade(
+            client,
+            state,
+            side="SHORT",
+            market_mode=market_mode,
+            klines_df=df,
+        )
         if result["ok"]:
             st.success(result["message"])
             changed_history = True
-            
+        else:
+            st.warning(result["message"])
 
     if auto_mode and permit_long and stage == 4:
         state.trade_mode = "AUTO"
-        result = execute_trade(client, state, side="LONG", klines_df=df)
+        result = execute_trade(
+            client,
+            state,
+            side="LONG",
+            market_mode=market_mode,
+            klines_df=df,
+        )
         if result["ok"]:
             st.warning(f"AUTO LONG: {result['message']}")
             changed_history = True
+        else:
+            st.warning(result["message"])
 
     if auto_mode and permit_short and stage == 4:
         state.trade_mode = "AUTO"
-        result = execute_trade(client, state, side="SHORT", klines_df=df)
+        result = execute_trade(
+            client,
+            state,
+            side="SHORT",
+            market_mode=market_mode,
+            klines_df=df,
+        )
         if result["ok"]:
             st.warning(f"AUTO SHORT: {result['message']}")
             changed_history = True
+        else:
+            st.warning(result["message"])
 
     if changed_history:
         save_history(state.open_trades)
-
-    save_history(state.open_trades)
 
     st.divider()
     

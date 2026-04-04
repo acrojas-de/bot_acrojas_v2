@@ -1,20 +1,6 @@
 from datetime import datetime
 import uuid
 
-# ===============================
-# LÓGICA DE RIESGO DEL BOT
-# ===============================
-# SL -> invalidación de la idea
-# TP -> objetivo del movimiento
-# RR -> calidad del trade
-#
-# El bot SOLO opera si RR >= 1.5
-# ===============================
-
-# ================ función calculate_smart_stop(...)
-#✅ usa estructura (mini swing)
-#✅ tiene buffer
-#✅ es mucho más robusto
 
 def calculate_smart_stop(side: str, klines_df, buffer_pct: float = 0.0015) -> float:
     """
@@ -36,9 +22,6 @@ def calculate_smart_stop(side: str, klines_df, buffer_pct: float = 0.0015) -> fl
 
     return round(stop_loss, 2)
 
-#================= Paso 1
-
-# ================ función calculate_take_profit(...)
 
 def calculate_take_profit(
     entry_price: float,
@@ -66,20 +49,15 @@ def calculate_take_profit(
         tp_rr = entry_price + (risk * rr)
         resistance = float(klines_df["high"].rolling(20).max().iloc[-2])
         take_profit = min(tp_rr, resistance)
-
     elif side == "SHORT":
         tp_rr = entry_price - (risk * rr)
         support = float(klines_df["low"].rolling(20).min().iloc[-2])
         take_profit = max(tp_rr, support)
-
     else:
         raise ValueError("side debe ser LONG o SHORT")
 
     return round(take_profit, 2)
 
-#================= Paso 2
-
-# ================ función build_trade_record(...)
 
 def build_trade_record(
     symbol: str,
@@ -105,31 +83,20 @@ def build_trade_record(
         "stop_loss": round(stop_loss, 2),
         "take_profit": round(take_profit, 2),
         "risk_per_unit": round(risk_per_unit, 2),
-
-# RR (Risk/Reward):
-# mide la calidad del trade antes de ejecutarse
-# >1.5 = trade válido
-# >2.0 = trade óptimo
-# se usa para:
-# - filtrar trades malos
-# - analizar rendimiento del bot
-# - futuras mejoras (break-even, parciales, trailing)   
-
         "rr": round(abs(take_profit - entry_price) / abs(entry_price - stop_loss), 2),
-        
         "status": "OPEN",
         "setup_type": "N/A",
         "signal_origin": "MANUAL",
         "mode": mode,
     }
 
-#================= Paso 4
 
 def execute_trade(
     client,
     state,
     side: str,
-    klines_df,
+    market_mode: str = "SPOT",
+    klines_df=None,
     quantity: float = 0.001,
     rr: float = 2.0,
     buffer_pct: float = 0.0015,
@@ -149,6 +116,20 @@ def execute_trade(
     if quantity <= 0:
         raise ValueError("quantity debe ser mayor que 0")
 
+    if market_mode == "SPOT" and side == "SHORT":
+        return {
+            "ok": False,
+            "message": "SHORT no está disponible en modo SPOT.",
+            "trade": None,
+        }
+
+    if market_mode == "FUTURES":
+        return {
+            "ok": False,
+            "message": "Modo FUTURES aún no implementado.",
+            "trade": None,
+        }
+
     symbol = state.symbol
     entry_price = float(state.price)
 
@@ -162,8 +143,6 @@ def execute_trade(
             "message": f"Ya existe una posición OPEN en {symbol} para {side}",
             "trade": None,
         }
-
-# ================ execute_trade(...)
 
     stop_loss = calculate_smart_stop(
         side=side,
@@ -189,7 +168,7 @@ def execute_trade(
             "message": f"Trade rechazado por RR insuficiente ({rr_real:.2f})",
             "trade": None,
         }
-        
+
     trade = build_trade_record(
         symbol=symbol,
         side=side,
@@ -200,8 +179,6 @@ def execute_trade(
         mode="SIMULATED",
     )
 
-# ================ Paso 3
-
     trade["setup_type"] = (
         state.signal.get("decision_report", {}).get("setup_type", "N/A")
         if getattr(state, "signal", None)
@@ -209,6 +186,7 @@ def execute_trade(
     )
 
     trade["signal_origin"] = "AUTO" if getattr(state, "trade_mode", None) == "AUTO" else "MANUAL"
+    trade["market_mode"] = market_mode
 
     if hasattr(state, "add_trade") and callable(state.add_trade):
         state.add_trade(trade)
@@ -219,6 +197,7 @@ def execute_trade(
         "ok": True,
         "message": (
             f"{side} preparado en {symbol} | "
+            f"modo={market_mode} | "
             f"qty={quantity} | "
             f"entrada={entry_price:.2f} | "
             f"SL={stop_loss:.2f} | "
@@ -226,7 +205,7 @@ def execute_trade(
         ),
         "trade": trade,
     }
-#================= manage_open_trades(state, current_price, df)
+
 
 def manage_open_trades(state, current_price, klines_df):
     if not hasattr(state, "open_trades"):
@@ -241,34 +220,22 @@ def manage_open_trades(state, current_price, klines_df):
         tp = trade["take_profit"]
         side = trade["side"]
 
-        # =========================
-        # 1. CALCULAR R (riesgo)
-        # =========================
         risk = abs(entry - sl)
 
         if risk == 0:
             continue
 
-        # =========================
-        # 2. CALCULAR BENEFICIO ACTUAL
-        # =========================
         if side == "LONG":
             profit = current_price - entry
         else:
             profit = entry - current_price
 
-        # =========================
-        # 3. BREAK EVEN (1R)
-        # =========================
         if profit >= risk:
             if side == "LONG" and trade["stop_loss"] < entry:
                 trade["stop_loss"] = entry
             elif side == "SHORT" and trade["stop_loss"] > entry:
                 trade["stop_loss"] = entry
 
-        # =========================
-        # 4. CIERRE POR STOP
-        # =========================
         if side == "LONG" and current_price <= trade["stop_loss"]:
             trade["status"] = "CLOSED"
             trade["pnl"] = (trade["stop_loss"] - entry) * trade["quantity"]
@@ -277,9 +244,6 @@ def manage_open_trades(state, current_price, klines_df):
             trade["status"] = "CLOSED"
             trade["pnl"] = (entry - trade["stop_loss"]) * trade["quantity"]
 
-        # =========================
-        # 5. CIERRE POR TAKE PROFIT
-        # =========================
         elif side == "LONG" and current_price >= tp:
             trade["status"] = "CLOSED"
             trade["pnl"] = (tp - entry) * trade["quantity"]
@@ -288,16 +252,6 @@ def manage_open_trades(state, current_price, klines_df):
             trade["status"] = "CLOSED"
             trade["pnl"] = (entry - tp) * trade["quantity"]
 
-# Su misión es revisar cada trade con estado OPEN y decidir si debe:
-# mover el stop_loss a break-even,
-# mantenerse abierto,
-# cerrarse por stop,
-# o cerrarse por take profit.
-# ================= Este es el corazón
-
-        # =========================
-        # 6. MODO CIERRE MANUAL
-        # =========================
 
 def close_trade_manually(trade: dict, current_price: float) -> dict:
     """
