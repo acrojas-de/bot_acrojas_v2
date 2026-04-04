@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
+from app.binance_client import get_balance
 
 from app.bootstrap import bootstrap
 from app.market.market_cycle import run_market_cycle
@@ -14,7 +15,6 @@ from app.execution.trade_service import (
     manage_open_trades,
     close_trade_manually,
 )
-
 
 # =========================================================
 # CONFIG
@@ -411,6 +411,29 @@ try:
         """,
         unsafe_allow_html=True,
     )
+
+    # =========================================================
+    # BLOQUE · CUENTA BINANCE
+    # =========================================================
+    st.markdown("### 💰 Cuenta Binance")
+
+    try:
+        balance = get_balance(client)
+
+        if balance:
+            free = float(balance.get("free", 0) or 0)
+            locked = float(balance.get("locked", 0) or 0)
+            total = free + locked
+
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Disponible", f"{free:.2f} USDT")
+            c2.metric("Bloqueado", f"{locked:.2f} USDT")
+            c3.metric("Total", f"{total:.2f} USDT")
+        else:
+            st.warning("No se encontró balance USDT en la cuenta.")
+
+    except Exception as e:
+        st.error(f"Error obteniendo balance de Binance: {e}")
 
     # =========================================================
     # BLOQUE 2 · CONTEXTO RÁPIDO
