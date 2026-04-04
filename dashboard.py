@@ -418,7 +418,9 @@ try:
     st.markdown("### 💰 Cuenta Binance")
 
     try:
-        balance = get_balance(client)
+        balances = get_balance(client)
+        for b in balances:
+            st.write(f"{b['asset']}: {b['free']} disponible")
 
         if balance:
             free = float(balance.get("free", 0) or 0)
