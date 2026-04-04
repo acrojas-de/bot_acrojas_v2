@@ -1,5 +1,5 @@
 
-def get_balance():
+def get_balance(client):
     try:
         account = client.get_account()
         balances = account.get("balances", [])
