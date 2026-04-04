@@ -419,24 +419,15 @@ try:
 
     try:
         balances = get_balance(client)
-        for b in balances:
-            st.write(f"{b['asset']}: {b['free']} disponible")
 
-        if balance:
-            free = float(balance.get("free", 0) or 0)
-            locked = float(balance.get("locked", 0) or 0)
-            total = free + locked
-
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Disponible", f"{free:.2f} USDT")
-            c2.metric("Bloqueado", f"{locked:.2f} USDT")
-            c3.metric("Total", f"{total:.2f} USDT")
+        if balances:
+            for b in balances:
+                st.write(f"{b['asset']}: {b['free']} disponible")
         else:
-            st.warning("No se encontró balance USDT en la cuenta.")
+            st.warning("No se encontraron balances disponibles en la cuenta.")
 
     except Exception as e:
         st.error(f"Error obteniendo balance de Binance: {e}")
-
     # =========================================================
     # BLOQUE 2 · CONTEXTO RÁPIDO
     # =========================================================
