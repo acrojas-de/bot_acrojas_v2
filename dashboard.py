@@ -710,6 +710,51 @@ try:
         f"permit_long={permit_long} | permit_short={permit_short} | "
         f"market_mode={market_mode}"
     )    
+    
+    # =========================================================
+    # BLOQUE 4.5 · ESTADO RÁPIDO DEL BOT
+    # =========================================================
+    st.markdown("### 🧠 Estado rápido del bot")
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        st.metric("Modo", market_mode)
+
+    with c2:
+        st.metric("Decisión", decision_text)
+
+    with c3:
+        st.metric("Stage", stage)
+
+    with c4:
+        st.metric("Sesgo", bias)
+
+    c5, c6 = st.columns(2)
+
+    with c5:
+        if permit_long:
+            st.success("✅ LONG permitido")
+        else:
+            st.error("⛔ LONG bloqueado")
+
+    with c6:
+        if market_mode == "SPOT":
+            st.info("ℹ️ SHORT no disponible en SPOT")
+        elif permit_short:
+            st.success("✅ SHORT permitido")
+        else:
+            st.error("⛔ SHORT bloqueado")
+
+    if decision_text == "OPERAR LONG":
+        st.success("🟢 Contexto favorable para LONG")
+    elif decision_text == "OPERAR SHORT":
+        st.error("🔴 Contexto favorable para SHORT")
+    elif "VIGILAR" in str(decision_text):
+        st.warning(f"🟡 {decision_text}")
+    else:
+        st.info("⚪ Sin entrada válida por ahora")
+    
     # =========================================================
     # BLOQUE 5 · POSICIÓN ACTUAL
     # =========================================================
