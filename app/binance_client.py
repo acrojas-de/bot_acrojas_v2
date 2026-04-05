@@ -79,13 +79,14 @@ def get_spot_portfolio(client):
         print(f"Error portfolio: {e}")
         return []
 
-
 def get_spot_trade_history(client, symbols=None, limit=50):
     """
     Devuelve historial Spot reciente de Binance.
     Si symbols=None, intenta con los activos de la cartera.
     """
     try:
+        from datetime import datetime
+
         history = []
 
         if symbols is None:
@@ -104,18 +105,24 @@ def get_spot_trade_history(client, symbols=None, limit=50):
                     qty = float(trade.get("qty", 0) or 0)
                     price = float(trade.get("price", 0) or 0)
                     quote_qty = float(trade.get("quoteQty", 0) or 0)
+                    trade_time = trade.get("time")
+
+                    if trade_time:
+                        formatted_time = datetime.fromtimestamp(trade_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
+                    else:
+                        formatted_time = ""
 
                     history.append({
+                        "time": formatted_time,
                         "symbol": symbol,
-                        "order_id": trade.get("orderId"),
+                        "side": "BUY" if trade.get("isBuyer") else "SELL",
                         "price": round(price, 6),
                         "qty": round(qty, 6),
                         "quote_qty": round(quote_qty, 2),
                         "commission": trade.get("commission"),
                         "commission_asset": trade.get("commissionAsset"),
-                        "is_buyer": trade.get("isBuyer"),
+                        "order_id": trade.get("orderId"),
                         "is_maker": trade.get("isMaker"),
-                        "time": trade.get("time"),
                     })
 
             except Exception:
@@ -127,6 +134,7 @@ def get_spot_trade_history(client, symbols=None, limit=50):
     except Exception as e:
         print(f"Error trade history: {e}")
         return []
+
 
 def calculate_spot_positions(client):
     """
@@ -156,7 +164,6 @@ def calculate_spot_positions(client):
 
             for trade in trades:
                 qty = float(trade.get("qty", 0) or 0)
-                price = float(trade.get("price", 0) or 0)
                 quote_qty = float(trade.get("quoteQty", 0) or 0)
 
                 if trade.get("isBuyer"):
@@ -166,7 +173,6 @@ def calculate_spot_positions(client):
                     net_qty -= qty
 
                     if net_qty > 0:
-                        # ajuste simple de coste al vender
                         avg_cost_before = net_cost / (net_qty + qty) if (net_qty + qty) > 0 else 0
                         net_cost -= qty * avg_cost_before
                     else:
@@ -197,4 +203,22 @@ def calculate_spot_positions(client):
 
     except Exception as e:
         print(f"Error calculate positions: {e}")
+        return []
+        
+def get_spot_alerts(client):
+    try:
+        positions = calculate_spot_positions(client)
+        alerts = []
+
+        for p in positions:
+            if p["pnl_pct"] > 50:
+                alerts.append(f"🚀 {p['asset']} +{p['pnl_pct']}% | TAKE PROFIT")
+
+            elif p["pnl_pct"] < -20:
+                alerts.append(f"⚠️ {p['asset']} {p['pnl_pct']}% | STOP LOSS")
+
+        return alerts
+
+    except Exception as e:
+        print(f"Error alerts: {e}")
         return []
