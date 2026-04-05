@@ -300,6 +300,11 @@ try:
         action_arrow = ""
         action_label = "SIN PERMISO DE ENTRADA"
         action_color = "#9e9e9e"
+        
+    if market_mode == "SPOT" and permit_short:
+        action_arrow = ""
+        action_label = "SHORT BLOQUEADO EN SPOT"
+        action_color = "#9e9e9e"
 
     market_state = decision.get("market_state", "N/A")
     setup_type = decision.get("setup_type", "N/A")
@@ -663,7 +668,7 @@ try:
         else:
             st.warning(result["message"])
 
-    if auto_mode and permit_long and stage == 3:
+    if auto_mode and permit_long and stage >= 3 and market_mode == "SPOT":
         state.trade_mode = "AUTO"
         result = execute_trade(
             client,
@@ -678,7 +683,7 @@ try:
         else:
             st.warning(result["message"])
 
-    if auto_mode and permit_short and stage == 4:
+    if auto_mode and permit_short and stage >= 3 and market_mode == "FUTURES":
         state.trade_mode = "AUTO"
         result = execute_trade(
             client,
@@ -698,6 +703,11 @@ try:
 
     st.divider()
     
+    st.caption(
+        f"DEBUG → stage={stage} | decision={decision_text} | "
+        f"permit_long={permit_long} | permit_short={permit_short} | "
+        f"market_mode={market_mode}"
+    )    
     # =========================================================
     # BLOQUE 5 · POSICIÓN ACTUAL
     # =========================================================
