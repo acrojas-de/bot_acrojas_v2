@@ -66,18 +66,64 @@ def get_spot_portfolio(client):
                 except Exception:
                     pass
 
-            if value > 0:
+            rounded_value = round(value, 2)
+
+            if rounded_value > 0:
                 portfolio.append({
                     "asset": symbol,
                     "quantity": round(total, 6),
                     "price": round(price, 4),
-                    "value_usdt": round(value, 2),
+                    "value_usdt": rounded_value,
                 })
 
         portfolio = sorted(portfolio, key=lambda x: x["value_usdt"], reverse=True)
 
         return portfolio
+        
+def get_spot_trade_history(client, symbols=None, limit=50):
+    """
+    Devuelve historial Spot reciente de Binance.
+    Si symbols=None, intenta con los activos de la cartera.
+    """
+    try:
+        history = []
+
+        if symbols is None:
+            portfolio = get_spot_portfolio(client)
+            symbols = [
+                f"{item['asset']}USDT"
+                for item in portfolio
+                if item["asset"] not in ["USDT", "USDC", "BUSD", "FDUSD", "EUR"]
+            ]
+
+        for symbol in symbols:
+            try:
+                trades = client.get_my_trades(symbol=symbol, limit=limit)
+
+                for trade in trades:
+                    qty = float(trade.get("qty", 0) or 0)
+                    price = float(trade.get("price", 0) or 0)
+                    quote_qty = float(trade.get("quoteQty", 0) or 0)
+
+                    history.append({
+                        "symbol": symbol,
+                        "order_id": trade.get("orderId"),
+                        "price": round(price, 6),
+                        "qty": round(qty, 6),
+                        "quote_qty": round(quote_qty, 2),
+                        "commission": trade.get("commission"),
+                        "commission_asset": trade.get("commissionAsset"),
+                        "is_buyer": trade.get("isBuyer"),
+                        "is_maker": trade.get("isMaker"),
+                        "time": trade.get("time"),
+                    })
+
+            except Exception:
+                pass
+
+        history = sorted(history, key=lambda x: x["time"], reverse=True)
+        return history
 
     except Exception as e:
-        print(f"Error portfolio: {e}")
+        print(f"Error trade history: {e}")
         return []

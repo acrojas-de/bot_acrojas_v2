@@ -1,6 +1,6 @@
 import streamlit as st
 from app.bootstrap import bootstrap
-from app.binance_client import get_spot_portfolio
+from app.binance_client import get_spot_portfolio, get_spot_trade_history
 
 st.set_page_config(page_title="Panel de Binance", layout="wide")
 
@@ -16,3 +16,12 @@ if portfolio:
     st.dataframe(portfolio, use_container_width=True)
 else:
     st.info("No hay activos en cartera.")
+
+st.markdown("## 🧾 Historial Spot reciente")
+
+history = get_spot_trade_history(client)
+
+if history:
+    st.dataframe(history, use_container_width=True)
+else:
+    st.info("No hay historial reciente disponible.")
