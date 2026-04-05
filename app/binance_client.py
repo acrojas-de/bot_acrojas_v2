@@ -127,3 +127,74 @@ def get_spot_trade_history(client, symbols=None, limit=50):
     except Exception as e:
         print(f"Error trade history: {e}")
         return []
+
+def calculate_spot_positions(client):
+    """
+    Calcula posición Spot real por activo usando historial de trades.
+    Devuelve cantidad neta, coste acumulado, precio medio y precio actual.
+    """
+    try:
+        portfolio = get_spot_portfolio(client)
+
+        positions = []
+
+        for item in portfolio:
+            asset = item["asset"]
+
+            if asset in ["USDT", "USDC", "BUSD", "FDUSD", "EUR"]:
+                continue
+
+            symbol = f"{asset}USDT"
+
+            try:
+                trades = client.get_my_trades(symbol=symbol, limit=200)
+            except Exception:
+                continue
+
+            net_qty = 0.0
+            net_cost = 0.0
+
+            for trade in trades:
+                qty = float(trade.get("qty", 0) or 0)
+                price = float(trade.get("price", 0) or 0)
+                quote_qty = float(trade.get("quoteQty", 0) or 0)
+
+                if trade.get("isBuyer"):
+                    net_qty += qty
+                    net_cost += quote_qty
+                else:
+                    net_qty -= qty
+
+                    if net_qty > 0:
+                        # ajuste simple de coste al vender
+                        avg_cost_before = net_cost / (net_qty + qty) if (net_qty + qty) > 0 else 0
+                        net_cost -= qty * avg_cost_before
+                    else:
+                        net_cost = 0.0
+
+            if net_qty <= 0:
+                continue
+
+            avg_entry = net_cost / net_qty if net_qty > 0 else 0.0
+            current_price = float(item["price"])
+            current_value = net_qty * current_price
+            pnl_usdt = current_value - net_cost
+            pnl_pct = (pnl_usdt / net_cost * 100) if net_cost > 0 else 0.0
+
+            positions.append({
+                "asset": asset,
+                "quantity": round(net_qty, 6),
+                "avg_entry": round(avg_entry, 4),
+                "current_price": round(current_price, 4),
+                "cost_usdt": round(net_cost, 2),
+                "value_usdt": round(current_value, 2),
+                "pnl_usdt": round(pnl_usdt, 2),
+                "pnl_pct": round(pnl_pct, 2),
+            })
+
+        positions = sorted(positions, key=lambda x: x["value_usdt"], reverse=True)
+        return positions
+
+    except Exception as e:
+        print(f"Error calculate positions: {e}")
+        return []
