@@ -28,11 +28,10 @@ def get_balance(client):
         
 def get_spot_portfolio(client):
     """
-    Cartera Spot con valoración en USDT (lista para PnL en el siguiente paso)
+    Cartera Spot con valoración en USDT
     """
     try:
         balances = get_balance(client)
-
         portfolio = []
 
         for asset_data in balances:
@@ -42,12 +41,10 @@ def get_spot_portfolio(client):
             price = 0.0
             value = 0.0
 
-            # Stablecoins
             if symbol in ["USDT", "USDC", "BUSD", "FDUSD"]:
                 price = 1.0
                 value = total
 
-            # EUR → convertir a USDT
             elif symbol == "EUR":
                 try:
                     ticker = client.get_symbol_ticker(symbol="EURUSDT")
@@ -58,7 +55,6 @@ def get_spot_portfolio(client):
 
             else:
                 pair = f"{symbol}USDT"
-
                 try:
                     ticker = client.get_symbol_ticker(symbol=pair)
                     price = float(ticker["price"])
@@ -77,9 +73,13 @@ def get_spot_portfolio(client):
                 })
 
         portfolio = sorted(portfolio, key=lambda x: x["value_usdt"], reverse=True)
-
         return portfolio
-        
+
+    except Exception as e:
+        print(f"Error portfolio: {e}")
+        return []
+
+
 def get_spot_trade_history(client, symbols=None, limit=50):
     """
     Devuelve historial Spot reciente de Binance.
