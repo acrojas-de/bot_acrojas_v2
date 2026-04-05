@@ -25,6 +25,8 @@ def main():
 
             process_telegram(state)
             market_state = run_market_cycle(client, state)
+            state.market_state = market_state
+
             print("📈 market_state:", market_state)
             print("📦 state.signal:", state.signal)
 

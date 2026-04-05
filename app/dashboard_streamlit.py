@@ -172,3 +172,19 @@ if positions:
     st.write(styled_positions)
 else:
     st.info("No hay posiciones calculadas.")
+    
+# ========================
+# 🧠 DEBUG BOT
+# ========================
+st.markdown("## 🧠 Estado interno del bot")
+
+with st.expander("Ver debug completo", expanded=False):
+    st.write("📡 Symbol:", getattr(state, "symbol", None))
+    st.write("💰 Precio:", getattr(state, "price", None))
+    st.write("📊 Señal:", getattr(state, "signal", None))
+    st.write("📈 Tendencia:", getattr(state, "trend", None))
+    st.write("🎯 Decisión:", getattr(state, "decision", None))
+    st.write("⚙️ Stage:", getattr(state, "stage", None))
+    st.write("📉 RSI:", getattr(state, "rsi", None))
+    st.write("🧾 Market mode:", getattr(state, "market_mode", None))
+    st.write("🧠 Último market_state:", getattr(state, "market_state", None))
