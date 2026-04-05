@@ -1,6 +1,10 @@
 import requests
 
 
+def process_telegram(state):
+    return
+
+
 def send_telegram_message(message: str, token: str, chat_id: str):
     try:
         url = f"https://api.telegram.org/bot{token}/sendMessage"

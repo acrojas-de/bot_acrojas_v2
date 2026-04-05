@@ -158,6 +158,12 @@ if "client" not in st.session_state or "state" not in st.session_state:
 client = st.session_state.client
 state = st.session_state.state
 
+trade_mode_key = "trade_market_mode"
+if trade_mode_key not in st.session_state:
+    st.session_state[trade_mode_key] = "SPOT"
+
+market_mode = st.session_state[trade_mode_key]
+
 saved_trades = load_history()
 if saved_trades:
     state.open_trades = saved_trades
@@ -605,15 +611,11 @@ try:
     exec1, exec2, exec3, exec4 = st.columns([1, 1, 1, 1])
 
     # 🔥 MODO DE MERCADO (SPOT / FUTURES)
-    trade_mode_key = "trade_market_mode"
-    if trade_mode_key not in st.session_state:
-        st.session_state[trade_mode_key] = "SPOT"
-
     market_mode = st.radio(
         "⚙️ Modo de ejecución",
         ["SPOT", "FUTURES"],
         horizontal=True,
-        key=trade_mode_key,
+        key="trade_market_mode",
     )
 
     st.caption(f"Modo activo: {market_mode}")
