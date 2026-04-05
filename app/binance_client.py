@@ -21,3 +21,63 @@ def get_balance(client):
     except Exception as e:
         print(f"Error Binance balance: {e}")
         return []
+        
+# ================================
+# 👉 💼 MI CARTERA
+# ================================
+        
+def get_spot_portfolio(client):
+    """
+    Cartera Spot con valoración en USDT (lista para PnL en el siguiente paso)
+    """
+    try:
+        balances = get_balance(client)
+
+        portfolio = []
+
+        for asset_data in balances:
+            symbol = asset_data["asset"]
+            total = asset_data["free"] + asset_data["locked"]
+
+            price = 0.0
+            value = 0.0
+
+            # Stablecoins
+            if symbol in ["USDT", "USDC", "BUSD", "FDUSD"]:
+                price = 1.0
+                value = total
+
+            # EUR → convertir a USDT
+            elif symbol == "EUR":
+                try:
+                    ticker = client.get_symbol_ticker(symbol="EURUSDT")
+                    price = float(ticker["price"])
+                    value = total * price
+                except Exception:
+                    pass
+
+            else:
+                pair = f"{symbol}USDT"
+
+                try:
+                    ticker = client.get_symbol_ticker(symbol=pair)
+                    price = float(ticker["price"])
+                    value = total * price
+                except Exception:
+                    pass
+
+            if value > 0:
+                portfolio.append({
+                    "asset": symbol,
+                    "quantity": round(total, 6),
+                    "price": round(price, 4),
+                    "value_usdt": round(value, 2),
+                })
+
+        portfolio = sorted(portfolio, key=lambda x: x["value_usdt"], reverse=True)
+
+        return portfolio
+
+    except Exception as e:
+        print(f"Error portfolio: {e}")
+        return []
