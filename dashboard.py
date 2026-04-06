@@ -196,6 +196,7 @@ try:
         st.write("signal:", signal)
         st.write("compression:", compression)
         st.write("decision_report:", decision)
+        st.write("compression_label:", compression.get("compression_label"))
 
     stage = compression.get("compression_stage", 0)
     label = compression.get("compression_label", "IDLE")
