@@ -19,9 +19,7 @@ from app.execution.trade_service import (
 # =========================================================
 # CONFIG
 # =========================================================
-st.set_page_config(page_title="BOT TEST 999", layout="wide")
-st.title("🔥 BOT TEST 999")
-st.error("🔥 BUILD TEST OMPARE 777")
+st.set_page_config(page_title="Bot Acrojas", layout="wide")
 
 st_autorefresh(interval=15000, key="bot_refresh")
 
@@ -39,7 +37,7 @@ st.markdown("""
 st.markdown("""
 <div style="
     text-align:center;
-    margin-bottom:1px;
+    margin-bottom:6px;
     line-height:1.1;
 ">
     <div style="font-size:32px; font-weight:800;">
@@ -93,7 +91,6 @@ def calc_trade_pnl(trade: dict, current_price) -> float:
         return (float(current_price) - entry) * qty
     return (entry - float(current_price)) * qty
 
-# render_trade_card (...)
 
 def render_trade_card(trade: dict, current_price) -> None:
     side = trade.get("side", "N/A")
@@ -145,10 +142,6 @@ def render_trade_card(trade: dict, current_price) -> None:
     except AttributeError:
         st.markdown(html, unsafe_allow_html=True)
 
-# Badges para OPEN/CLOSED y LONG/SHORT
-# Texto con contraste real
-# Tarjeta más pro en historial
-
 
 # =========================================================
 # STATE
@@ -178,7 +171,6 @@ if saved_trades:
 try:
     market_cycle_result = run_market_cycle(client, state)
 
-    # usar siempre la señal más fresca posible
     if isinstance(market_cycle_result, dict):
         if "signal" in market_cycle_result and market_cycle_result["signal"]:
             state.signal = market_cycle_result["signal"]
@@ -189,22 +181,15 @@ try:
 
     decision = signal.get("decision_report", {}) or {}
     decision_text = decision.get("decision", "N/A")
-    
+
     # =========================
-    # 🧠 PANEL COMPRESIÓN (LIMPIO)
+    # 🧠 CÁLCULO COMPRESIÓN
     # =========================
     compression = signal.get("compression", {})
-    
-    with st.expander("🛠 Debug señal cruda", expanded=False):
-        st.write("signal:", signal)
-        st.write("compression:", compression)
-        st.write("decision_report:", decision)
-        st.write("compression_label:", compression.get("compression_label"))
 
     stage = compression.get("compression_stage", 0)
     label = compression.get("compression_label", "IDLE")
-    setup_type = signal.get("setup_type", "NONE")
-    decision_setup = decision.get("setup_type", "N/A")
+    setup_type_signal = signal.get("setup_type", "NONE")
 
     trend_long = compression.get("trend_long", False)
     trend_short = compression.get("trend_short", False)
@@ -225,7 +210,6 @@ try:
     else:
         trigger_status = "PENDIENTE"
 
-    # etiquetas más humanas
     label_map = {
         "IDLE": "Sin compresión",
         "COMPRESSION DETECTED": "Compresión detectada",
@@ -234,59 +218,11 @@ try:
         "BREAKOUT TRIGGERED": "Ruptura activada",
         "COMPRESSION LONG": "Long confirmado",
         "COMPRESSION SHORT": "Short confirmado",
+        "EXPLOSION LONG": "Explosión long",
+        "EXPLOSION SHORT": "Explosión short",
     }
     pretty_label = label_map.get(label, label)
-
-    st.subheader("🧠 Compresión")
-
     progress_value = min(stage / 4, 1.0)
-    st.progress(progress_value, text=pretty_label)
-    
-    if stage == 3:
-        st.warning(f"🧠 Compresión avanzada ({bias}) — posible ruptura inminente")
-        
-    if stage == 3 and bias == "SHORT":
-        st.caption("📉 Probabilidad mayor de ruptura bajista")
-    elif stage == 3 and bias == "LONG":
-        st.caption("📈 Probabilidad mayor de ruptura alcista")        
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Estado", pretty_label)
-    col2.metric("Sesgo", bias)
-    col3.metric("Disparo", trigger_status)
-    col4.metric("Setup compresión", setup_type)
-
-    if setup_type == "COMPRESSION_LONG":
-        st.success("🔥 Setup de compresión LONG confirmado")
-    elif setup_type == "COMPRESSION_SHORT":
-        st.error("🔥 Setup de compresión SHORT confirmado")
-    elif stage in [2, 3] and setup_type == "NONE":
-        st.warning("🟡 Compresión activa: vigilando ruptura")
-    else:
-        st.info("⚪ Sin compresión relevante")
-
-# =========================
-#    EXPANDER
-# ========================
-
-    with st.expander("Ver detalle técnico de compresión"):
-        st.write(f"Compression: {compression.get('compression')}")
-        st.write(f"EMA squeezed: {compression.get('ema_squeezed')}")
-        st.write(f"Breakout up: {compression.get('breakout_up')}")
-        st.write(f"Breakout down: {compression.get('breakout_down')}")
-        st.write(f"Trend long: {compression.get('trend_long')}")
-        st.write(f"Trend short: {compression.get('trend_short')}")
-        st.write(f"Strong bullish: {compression.get('strong_bullish')}")
-        st.write(f"Strong bearish: {compression.get('strong_bearish')}")
-        
-        st.write(f"Confirm long: {compression.get('confirm_long')}")
-        st.write(f"Confirm short: {compression.get('confirm_short')}")
-
-    if compression.get("confirm_long"):
-        st.success("✔ Confirmación LONG válida")
-
-    if compression.get("confirm_short"):
-        st.error("✔ Confirmación SHORT válida")
 
     blink = int(time.time()) % 2 == 0
 
@@ -294,17 +230,14 @@ try:
     permit_short = decision_text == "OPERAR SHORT"
     watch_long = decision_text == "VIGILAR LONG"
     watch_short = decision_text == "VIGILAR SHORT"
-    
-    raw_permit_long = permit_long
-    raw_permit_short = permit_short
-    
+
     # 🔥 BLOQUEO FINO POR COMPRESIÓN
     allow_early_long = (
         stage >= 3
         and bias == "LARGO"
         and breakout_up
         and compression.get("confirm_long", False)
-        and setup_type in ["COMPRESSION_LONG", "EXPLOSION_LONG"]
+        and setup_type_signal in ["COMPRESSION_LONG", "EXPLOSION_LONG", "EMA50_FIRST_TOUCH_LONG"]
         and market_mode == "SPOT"
     )
 
@@ -313,18 +246,13 @@ try:
         and bias == "CORTO"
         and breakout_down
         and compression.get("confirm_short", False)
-        and setup_type in ["COMPRESSION_SHORT", "EXPLOSION_SHORT"]
+        and setup_type_signal in ["COMPRESSION_SHORT", "EXPLOSION_SHORT", "EMA50_FIRST_TOUCH_SHORT"]
         and market_mode == "FUTURES"
     )
 
     if stage < 4 and not allow_early_long and not allow_early_short:
         permit_long = False
         permit_short = False
-        st.info("⏳ Esperando breakout confirmado (sin entradas aún)")
-    elif allow_early_long:
-        st.success("🚀 Entrada anticipada LONG permitida por ruptura confirmada")
-    elif allow_early_short:
-        st.warning("🚀 Entrada anticipada SHORT permitida por ruptura confirmada")
 
     if permit_long:
         action_arrow = "⬆️" if blink else ""
@@ -346,7 +274,7 @@ try:
         action_arrow = ""
         action_label = "SIN PERMISO DE ENTRADA"
         action_color = "#9e9e9e"
-        
+
     if market_mode == "SPOT" and permit_short:
         action_arrow = ""
         action_label = "SHORT BLOQUEADO EN SPOT"
@@ -479,6 +407,7 @@ try:
 
     except Exception as e:
         st.error(f"Error obteniendo balance de Binance: {e}")
+
     # =========================================================
     # BLOQUE 2 · CONTEXTO RÁPIDO
     # =========================================================
@@ -526,9 +455,8 @@ try:
 
     df["ema21"] = df["close"].ewm(span=21).mean()
     df["ema50"] = df["close"].ewm(span=50).mean()
-    
-    manage_open_trades(state, state.price, df)
 
+    manage_open_trades(state, state.price, df)
 
     auto_key = f"auto_mode_{state.symbol or 'default'}"
     if auto_key not in st.session_state:
@@ -648,9 +576,8 @@ try:
     # =========================================================
     # BLOQUE 4 · CONTROLES DE EJECUCIÓN
     # =========================================================
-    exec1, exec2, exec3, exec4 = st.columns([1, 1, 1, 1])
+    exec1, exec2, exec3 = st.columns([1, 1, 1])
 
-    # 🔥 MODO DE MERCADO (SPOT / FUTURES)
     market_mode = st.radio(
         "⚙️ Modo de ejecución",
         ["SPOT", "FUTURES"],
@@ -672,8 +599,6 @@ try:
 
     if market_mode == "SPOT":
         st.info("🟢 Modo SPOT activo: solo operaciones LONG (compra real). SHORT estará disponible en FUTURES.")
-
-    # 👇 👇 👇 BLOQUE DE EJECUCIÓN
 
     open_positions = [t for t in state.open_trades if t.get("status") == "OPEN"]
     has_open_position = len(open_positions) > 0
@@ -745,13 +670,59 @@ try:
 
     st.divider()
 
-    st.caption(
-        f"DEBUG → stage={stage} | decision={decision_text} | "
-        f"raw_long={raw_permit_long} | raw_short={raw_permit_short} | "
-        f"permit_long={permit_long} | permit_short={permit_short} | "
-        f"market_mode={market_mode}"
-)
-    
+    # =========================================================
+    # BLOQUE 4.1 · PANEL DE COMPRESIÓN
+    # =========================================================
+    st.markdown("### 🧠 Compresión")
+
+    st.progress(progress_value, text=pretty_label)
+
+    if stage == 3:
+        st.warning(f"🧠 Compresión avanzada ({bias}) — posible ruptura inminente")
+
+    if stage == 3 and bias == "SHORT":
+        st.caption("📉 Probabilidad mayor de ruptura bajista")
+    elif stage == 3 and bias == "LONG":
+        st.caption("📈 Probabilidad mayor de ruptura alcista")
+
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Estado", pretty_label)
+    col2.metric("Sesgo", bias)
+    col3.metric("Disparo", trigger_status)
+    col4.metric("Setup compresión", setup_type_signal)
+
+    if setup_type_signal == "COMPRESSION_LONG":
+        st.success("🔥 Setup de compresión LONG confirmado")
+    elif setup_type_signal == "COMPRESSION_SHORT":
+        st.error("🔥 Setup de compresión SHORT confirmado")
+    elif stage in [2, 3] and setup_type_signal == "NONE":
+        st.warning("🟡 Compresión activa: vigilando ruptura")
+    else:
+        st.info("⚪ Sin compresión relevante")
+
+    if stage < 4 and not allow_early_long and not allow_early_short:
+        st.info("⏳ Esperando breakout confirmado (sin entradas aún)")
+    elif allow_early_long:
+        st.success("🚀 Entrada anticipada LONG permitida por ruptura confirmada")
+    elif allow_early_short:
+        st.warning("🚀 Entrada anticipada SHORT permitida por ruptura confirmada")
+
+    with st.expander("Ver detalle técnico de compresión"):
+        st.write(f"Compression: {compression.get('compression')}")
+        st.write(f"EMA squeezed: {compression.get('ema_squeezed')}")
+        st.write(f"Breakout up: {compression.get('breakout_up')}")
+        st.write(f"Breakout down: {compression.get('breakout_down')}")
+        st.write(f"Trend long: {compression.get('trend_long')}")
+        st.write(f"Trend short: {compression.get('trend_short')}")
+        st.write(f"Strong bullish: {compression.get('strong_bullish')}")
+        st.write(f"Strong bearish: {compression.get('strong_bearish')}")
+        st.write(f"Confirm long: {compression.get('confirm_long')}")
+        st.write(f"Confirm short: {compression.get('confirm_short')}")
+        st.write(f"EMA50 touch long: {compression.get('ema50_touch_long')}")
+        st.write(f"EMA50 touch short: {compression.get('ema50_touch_short')}")
+
+    st.divider()
+
     # =========================================================
     # BLOQUE 4.5 · ESTADO RÁPIDO DEL BOT
     # =========================================================
@@ -795,7 +766,7 @@ try:
         st.warning(f"🟡 {decision_text}")
     else:
         st.info("⚪ Sin entrada válida por ahora")
-    
+
     # =========================================================
     # BLOQUE 5 · POSICIÓN ACTUAL
     # =========================================================
@@ -873,13 +844,11 @@ try:
     else:
         st.info("No hay posición abierta.")
 
-
     st.divider()
 
     # =========================================================
     # BLOQUE 6 · HISTORIAL DE OPERACIONES
     # =========================================================
-    
     st.markdown("### Historial de operaciones")
 
     if state.open_trades:

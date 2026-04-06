@@ -61,6 +61,8 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
     explosion_short = compression.get("explosion_short", False)
     flag_active = compression.get("flag_active", False)
     flag_side = compression.get("flag_side", "NONE")
+    ema50_touch_long = compression.get("ema50_touch_long", False)
+    ema50_touch_short = compression.get("ema50_touch_short", False)
 
     trap_flag = trap.get("trap", False) if isinstance(trap, dict) else False
 
@@ -68,7 +70,6 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
     setup_type = "NONE"
     detected = False
 
-    # PRIORIDAD 1: EXPLOSION
     if explosion_long:
         reasons.append("Explosion alcista tras compresion")
         setup_type = "EXPLOSION_LONG"
@@ -89,11 +90,9 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
             "reasons": reasons,
         }
 
-    # CONTEXTO: BANDERA
     if flag_active:
         reasons.append(f"Compresion tipo bandera detectada ({flag_side})")
 
-    # PRIORIDAD 2: COMPRESION CONFIRMADA
     if compression_long:
         reasons.append("Compresion + ruptura alcista confirmada")
         setup_type = "COMPRESSION_LONG"
@@ -114,7 +113,26 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
             "reasons": reasons,
         }
 
-    # SETUPS CLASICOS
+    if ema50_touch_long:
+        reasons.append("Primer toque/cruce alcista sobre EMA50")
+        setup_type = "EMA50_FIRST_TOUCH_LONG"
+        detected = True
+        return {
+            "detected": detected,
+            "setup_type": setup_type,
+            "reasons": reasons,
+        }
+
+    if ema50_touch_short:
+        reasons.append("Primer toque/cruce bajista bajo EMA50")
+        setup_type = "EMA50_FIRST_TOUCH_SHORT"
+        detected = True
+        return {
+            "detected": detected,
+            "setup_type": setup_type,
+            "reasons": reasons,
+        }
+
     if market_context["state"] == "TENDENCIA" and market_context["bias"] == "LONG":
         if radar.get("5m") == "BUY" and radar.get("15m") == "BUY" and radar.get("1h") == "BUY":
             reasons.append("Radar alineado en 5m, 15m y 1h para LONG")
@@ -148,25 +166,23 @@ def validate_setup(signal: dict, market_context: dict, setup: dict) -> dict:
     reasons_yes = []
     reasons_no = []
 
-    # Permitir compresion y explosion aunque nazcan en rango/transicion
+    allowed_early_setups = (
+        "COMPRESSION_LONG",
+        "COMPRESSION_SHORT",
+        "EXPLOSION_LONG",
+        "EXPLOSION_SHORT",
+        "EMA50_FIRST_TOUCH_LONG",
+        "EMA50_FIRST_TOUCH_SHORT",
+    )
+
     if market_context["state"] != "TENDENCIA":
-        if setup["setup_type"] not in (
-            "COMPRESSION_LONG",
-            "COMPRESSION_SHORT",
-            "EXPLOSION_LONG",
-            "EXPLOSION_SHORT",
-        ):
+        if setup["setup_type"] not in allowed_early_setups:
             reasons_no.append(f"Estado de mercado no operable: {market_context['state']}")
         else:
-            reasons_yes.append("Setup valido de compresion o explosion fuera de tendencia")
+            reasons_yes.append("Setup valido fuera de tendencia principal")
 
     if market_context["bias"] == "MIXTO":
-        if setup["setup_type"] not in (
-            "COMPRESSION_LONG",
-            "COMPRESSION_SHORT",
-            "EXPLOSION_LONG",
-            "EXPLOSION_SHORT",
-        ):
+        if setup["setup_type"] not in allowed_early_setups:
             reasons_no.append("Sesgo mixto, sin direccion clara")
 
     if not setup["detected"]:
@@ -176,12 +192,7 @@ def validate_setup(signal: dict, market_context: dict, setup: dict) -> dict:
 
     interpretation = str(signal.get("interpretation", "")).upper()
     if "INDECISO" in interpretation:
-        if setup["setup_type"] not in (
-            "COMPRESSION_LONG",
-            "COMPRESSION_SHORT",
-            "EXPLOSION_LONG",
-            "EXPLOSION_SHORT",
-        ):
+        if setup["setup_type"] not in allowed_early_setups:
             reasons_no.append("Interpretacion de mercado indeciso")
 
     trap = signal.get("trap", {})
@@ -209,6 +220,7 @@ def build_operational_decision(signal: dict) -> dict:
         "LONG",
         "COMPRESSION_LONG",
         "EXPLOSION_LONG",
+        "EMA50_FIRST_TOUCH_LONG",
     ):
         decision = "OPERAR LONG"
 
@@ -216,6 +228,7 @@ def build_operational_decision(signal: dict) -> dict:
         "SHORT",
         "COMPRESSION_SHORT",
         "EXPLOSION_SHORT",
+        "EMA50_FIRST_TOUCH_SHORT",
     ):
         decision = "OPERAR SHORT"
 
