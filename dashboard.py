@@ -173,18 +173,29 @@ if saved_trades:
 # MAIN
 # =========================================================
 try:
-    run_market_cycle(client, state)
+    market_cycle_result = run_market_cycle(client, state)
 
-    signal = state.signal if state.signal else {}
+    # usar siempre la señal más fresca posible
+    if isinstance(market_cycle_result, dict):
+        if "signal" in market_cycle_result and market_cycle_result["signal"]:
+            state.signal = market_cycle_result["signal"]
+        state.market_cycle_result = market_cycle_result
+
+    signal = getattr(state, "signal", {}) or {}
     strength = signal.get("strength", "N/A")
 
-    decision = signal.get("decision_report", {})
+    decision = signal.get("decision_report", {}) or {}
     decision_text = decision.get("decision", "N/A")
     
     # =========================
     # 🧠 PANEL COMPRESIÓN (LIMPIO)
     # =========================
     compression = signal.get("compression", {})
+    
+    with st.expander("🛠 Debug señal cruda", expanded=False):
+        st.write("signal:", signal)
+        st.write("compression:", compression)
+        st.write("decision_report:", decision)
 
     stage = compression.get("compression_stage", 0)
     label = compression.get("compression_label", "IDLE")
@@ -279,6 +290,9 @@ try:
     permit_short = decision_text == "OPERAR SHORT"
     watch_long = decision_text == "VIGILAR LONG"
     watch_short = decision_text == "VIGILAR SHORT"
+    
+    raw_permit_long = permit_long
+    raw_permit_short = permit_short
     
     # 🔥 BLOQUEO POR COMPRESIÓN (NO ENTRAR ANTES DE BREAKOUT)
     if stage < 4:
@@ -704,12 +718,13 @@ try:
         save_history(state.open_trades)
 
     st.divider()
-    
+
     st.caption(
         f"DEBUG → stage={stage} | decision={decision_text} | "
+        f"raw_long={raw_permit_long} | raw_short={raw_permit_short} | "
         f"permit_long={permit_long} | permit_short={permit_short} | "
         f"market_mode={market_mode}"
-    )    
+)
     
     # =========================================================
     # BLOQUE 4.5 · ESTADO RÁPIDO DEL BOT
