@@ -19,8 +19,8 @@ from app.execution.trade_service import (
 # =========================================================
 # CONFIG
 # =========================================================
-st.set_page_config(page_title="Bot Acrojas", layout="wide")
-
+st.set_page_config(page_title="BOT TEST 999", layout="wide")
+st.title("🔥 BOT TEST 999")
 st.error("🔥 BUILD TEST OMPARE 777")
 
 st_autorefresh(interval=15000, key="bot_refresh")
