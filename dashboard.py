@@ -298,11 +298,33 @@ try:
     raw_permit_long = permit_long
     raw_permit_short = permit_short
     
-    # 🔥 BLOQUEO POR COMPRESIÓN (NO ENTRAR ANTES DE BREAKOUT)
-    if stage < 4:
+    # 🔥 BLOQUEO FINO POR COMPRESIÓN
+    allow_early_long = (
+        stage >= 3
+        and bias == "LARGO"
+        and breakout_up
+        and compression.get("confirm_long", False)
+        and setup_type in ["COMPRESSION_LONG", "EXPLOSION_LONG"]
+        and market_mode == "SPOT"
+    )
+
+    allow_early_short = (
+        stage >= 3
+        and bias == "CORTO"
+        and breakout_down
+        and compression.get("confirm_short", False)
+        and setup_type in ["COMPRESSION_SHORT", "EXPLOSION_SHORT"]
+        and market_mode == "FUTURES"
+    )
+
+    if stage < 4 and not allow_early_long and not allow_early_short:
         permit_long = False
         permit_short = False
         st.info("⏳ Esperando breakout confirmado (sin entradas aún)")
+    elif allow_early_long:
+        st.success("🚀 Entrada anticipada LONG permitida por ruptura confirmada")
+    elif allow_early_short:
+        st.warning("🚀 Entrada anticipada SHORT permitida por ruptura confirmada")
 
     if permit_long:
         action_arrow = "⬆️" if blink else ""
