@@ -50,7 +50,6 @@ def signal_strength(radar):
 
     return "⚖️ NEUTRAL"
 
-
 def rebound_probability(radar, rsi_map):
     if (
         radar["5m"] == "SELL"
@@ -64,7 +63,7 @@ def rebound_probability(radar, rsi_map):
         return "MEDIO"
 
     return "BAJO"
-
+    
 
 def klines_to_df(klines):
     df = pd.DataFrame(
@@ -85,23 +84,6 @@ def klines_to_df(klines):
 
     return df
 
-    # =====================================
-    # 🔥 FIRST TOUCH EMA50 (NUEVO SETUP)
-    # =====================================
-    ema50_touch_long = False
-    ema50_touch_short = False
-
-    if len(df) >= 3:
-        prev = df.iloc[-2]
-        curr = df.iloc[-1]
-
-        # LONG → viene desde abajo y toca/cruza EMA50
-        if prev["close"] < prev["ema50"] and curr["close"] >= curr["ema50"]:
-            ema50_touch_long = True
-
-        # SHORT → viene desde arriba y toca/cruza EMA50
-        if prev["close"] > prev["ema50"] and curr["close"] <= curr["ema50"]:
-            ema50_touch_short = True
 
 def detect_compression_setup(df):
     if df is None or len(df) < 10:
@@ -114,9 +96,17 @@ def detect_compression_setup(df):
             "flag_long": False,
             "flag_short": False,
             "flag_side": "NONE",
+            "setup_type": "NONE",
+            "compression": False,
+            "ema_squeezed": False,
+            "breakout_up": False,
+            "breakout_down": False,
+            "strong_bullish": False,
+            "strong_bearish": False,
+            "trend_long": False,
+            "trend_short": False,
             "confirm_long": False,
             "confirm_short": False,
-            "setup_type": "NONE",
             "compression_stage": 0,
             "compression_label": "IDLE",
             "ema50_touch_long": False,
@@ -139,7 +129,7 @@ def detect_compression_setup(df):
     trend_short = bool(last["ema21"] <= last["ema50"])
 
     # =====================================
-    # 🔥 FIRST TOUCH EMA50 (NUEVO SETUP)
+    # 🔥 FIRST TOUCH EMA50
     # =====================================
     ema50_touch_long = False
     ema50_touch_short = False
@@ -148,11 +138,9 @@ def detect_compression_setup(df):
         prev = df.iloc[-2]
         curr = df.iloc[-1]
 
-        # LONG → viene desde abajo y toca/cruza EMA50
         if prev["close"] < prev["ema50"] and curr["close"] >= curr["ema50"]:
             ema50_touch_long = True
 
-        # SHORT → viene desde arriba y toca/cruza EMA50
         if prev["close"] > prev["ema50"] and curr["close"] <= curr["ema50"]:
             ema50_touch_short = True
 
@@ -273,41 +261,6 @@ def detect_compression_setup(df):
         "ema50_touch_long": ema50_touch_long,
         "ema50_touch_short": ema50_touch_short,
     }
-
-    # =========================
-    # 📦 RETURN FINAL COMPLETO
-    # =========================
-    return {
-        "compression_long": compression_long,
-        "compression_short": compression_short,
-        "explosion_long": explosion_long,
-        "explosion_short": explosion_short,
-        "flag_active": flag_active,
-        "flag_long": flag_long,
-        "flag_short": flag_short,
-        "flag_side": flag_side,
-        "setup_type": setup_type,
-
-        "compression": compression,
-        "ema_squeezed": ema_squeezed,
-        "breakout_up": long_break,
-        "breakout_down": short_break,
-        "strong_bullish": bullish,
-        "strong_bearish": bearish,
-        "trend_long": trend_long,
-        "trend_short": trend_short,
-
-        "confirm_long": confirm_long,
-        "confirm_short": confirm_short,
-
-        "compression_stage": compression_stage,
-        "compression_label": compression_label,
-        
-        "ema50_touch_long": ema50_touch_long,
-        "ema50_touch_short": ema50_touch_short,
-    }
-    
-    
 
 
 def build_signal(price, klines_map):

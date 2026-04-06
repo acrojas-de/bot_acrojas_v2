@@ -47,7 +47,6 @@ def classify_market_state(signal: dict) -> dict:
         "reasons": reasons,
     }
 
-
 def detect_setup(signal: dict, market_context: dict) -> dict:
     radar = signal.get("radar", {})
     rsi_map = signal.get("rsi", {})
@@ -55,14 +54,30 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
 
     compression = signal.get("compression", {})
 
+    # 🔥 PRIORIDAD 0: EMA50 FIRST TOUCH
+    ema50_long = compression.get("ema50_touch_long", False)
+    ema50_short = compression.get("ema50_touch_short", False)
+
+    if ema50_long:
+        return {
+            "detected": True,
+            "setup_type": "EMA50_FIRST_TOUCH_LONG",
+            "reasons": ["Primer toque EMA50 desde abajo"],
+        }
+
+    if ema50_short:
+        return {
+            "detected": True,
+            "setup_type": "EMA50_FIRST_TOUCH_SHORT",
+            "reasons": ["Primer toque EMA50 desde arriba"],
+        }
+
     compression_long = compression.get("compression_long", False)
     compression_short = compression.get("compression_short", False)
     explosion_long = compression.get("explosion_long", False)
     explosion_short = compression.get("explosion_short", False)
     flag_active = compression.get("flag_active", False)
     flag_side = compression.get("flag_side", "NONE")
-    ema50_touch_long = compression.get("ema50_touch_long", False)
-    ema50_touch_short = compression.get("ema50_touch_short", False)
 
     trap_flag = trap.get("trap", False) if isinstance(trap, dict) else False
 
