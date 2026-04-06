@@ -16,12 +16,13 @@ from app.execution.trade_service import (
     close_trade_manually,
 )
 
-st.error("🔥 BUILD TEST OMPARE 777")
-
 # =========================================================
 # CONFIG
 # =========================================================
 st.set_page_config(page_title="Bot Acrojas", layout="wide")
+
+st.error("🔥 BUILD TEST OMPARE 777")
+
 st_autorefresh(interval=15000, key="bot_refresh")
 
 HISTORY_FILE = Path("trade_history.json")
