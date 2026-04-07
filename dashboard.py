@@ -579,13 +579,23 @@ try:
     exec1, exec2, exec3 = st.columns([1, 1, 1])
 
     market_mode = st.radio(
-        "⚙️ Modo de ejecución",
+        "⚙️ Modo de mercado",
         ["SPOT", "FUTURES"],
         horizontal=True,
         key="trade_market_mode",
     )
 
-    st.caption(f"Modo activo: {market_mode}")
+    execution_mode = st.radio(
+        "🧪 Modo de ejecución",
+        ["SIMULATED", "REAL"],
+        horizontal=True,
+        key="execution_mode",
+    )
+
+    st.caption(f"Modo mercado: {market_mode} · Modo ejecución: {execution_mode}")
+
+    if execution_mode == "REAL":
+        st.error("⚠️ MODO REAL ACTIVADO — revisa bien antes de lanzar órdenes")
 
     with exec1:
         auto_mode = st.toggle("AUTO", value=st.session_state[auto_key], key=auto_key)
@@ -612,6 +622,7 @@ try:
             state,
             side="LONG",
             market_mode=market_mode,
+            execution_mode=execution_mode,  # 👈 AÑADIR
             klines_df=df,
         )
         if result["ok"]:
@@ -627,8 +638,10 @@ try:
             state,
             side="SHORT",
             market_mode=market_mode,
+            execution_mode=execution_mode,
             klines_df=df,
         )
+        
         if result["ok"]:
             st.success(result["message"])
             changed_history = True
@@ -642,8 +655,10 @@ try:
             state,
             side="LONG",
             market_mode=market_mode,
+            execution_mode=execution_mode,
             klines_df=df,
         )
+        
         if result["ok"]:
             st.warning(f"AUTO LONG: {result['message']}")
             changed_history = True
@@ -657,8 +672,10 @@ try:
             state,
             side="SHORT",
             market_mode=market_mode,
+            execution_mode=execution_mode,
             klines_df=df,
         )
+        
         if result["ok"]:
             st.warning(f"AUTO SHORT: {result['message']}")
             changed_history = True
