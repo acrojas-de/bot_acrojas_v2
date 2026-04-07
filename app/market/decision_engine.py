@@ -58,6 +58,9 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
     ema50_long = compression.get("ema50_touch_long", False)
     ema50_short = compression.get("ema50_touch_short", False)
 
+    print("EMA50 LONG:", ema50_long)
+    print("EMA50 SHORT:", ema50_short)
+
     if ema50_long:
         return {
             "detected": True,
@@ -128,25 +131,6 @@ def detect_setup(signal: dict, market_context: dict) -> dict:
             "reasons": reasons,
         }
 
-    if ema50_touch_long:
-        reasons.append("Primer toque/cruce alcista sobre EMA50")
-        setup_type = "EMA50_FIRST_TOUCH_LONG"
-        detected = True
-        return {
-            "detected": detected,
-            "setup_type": setup_type,
-            "reasons": reasons,
-        }
-
-    if ema50_touch_short:
-        reasons.append("Primer toque/cruce bajista bajo EMA50")
-        setup_type = "EMA50_FIRST_TOUCH_SHORT"
-        detected = True
-        return {
-            "detected": detected,
-            "setup_type": setup_type,
-            "reasons": reasons,
-        }
 
     if market_context["state"] == "TENDENCIA" and market_context["bias"] == "LONG":
         if radar.get("5m") == "BUY" and radar.get("15m") == "BUY" and radar.get("1h") == "BUY":

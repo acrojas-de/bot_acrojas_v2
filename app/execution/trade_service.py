@@ -96,6 +96,7 @@ def execute_trade(
     state,
     side: str,
     market_mode: str = "SPOT",
+    execution_mode: str = "SIMULATED",
     klines_df=None,
     quantity: float = 0.001,
     rr: float = 2.0,
@@ -124,11 +125,8 @@ def execute_trade(
         }
 
     if market_mode == "FUTURES":
-        return {
-            "ok": False,
-            "message": "Modo FUTURES aún no implementado.",
-            "trade": None,
-        }
+        # De momento lo tratamos igual que SPOT (simulado)
+        pass
 
     symbol = state.symbol
     entry_price = float(state.price)
@@ -184,7 +182,7 @@ def execute_trade(
         stop_loss=stop_loss,
         take_profit=take_profit,
         quantity=quantity,
-        mode="SIMULATED",
+        mode=execution_mode,
     )
 
     trade["setup_type"] = (
@@ -243,6 +241,20 @@ def manage_open_trades(state, current_price, klines_df):
                 trade["stop_loss"] = entry
             elif side == "SHORT" and trade["stop_loss"] > entry:
                 trade["stop_loss"] = entry
+                
+        if side == "LONG":
+            if profit >= risk * 2:
+                trade["stop_loss"] = round(max(trade["stop_loss"], entry + (risk * 1)), 2)
+
+            if profit >= risk * 3:
+                trade["stop_loss"] = round(max(trade["stop_loss"], entry + (risk * 2)), 2)
+
+        elif side == "SHORT":
+            if profit >= risk * 2:
+                trade["stop_loss"] = round(min(trade["stop_loss"], entry - (risk * 1)), 2)
+
+            if profit >= risk * 3:
+                trade["stop_loss"] = round(min(trade["stop_loss"], entry - (risk * 2)), 2)
 
         if side == "LONG" and current_price <= trade["stop_loss"]:
             trade["status"] = "CLOSED"
