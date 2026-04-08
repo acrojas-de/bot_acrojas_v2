@@ -841,11 +841,20 @@
   // 📈 BLOQUE 4: MOTOR DE PRECIO Y VELAS
   // ========================================================
   function simulateTick() {
-    const cfg = symbolConfig[symbol];
-    const drift = (Math.random() - 0.5) * cfg.vol;
-    const impulse = Math.sin(Date.now() / 5000) * (cfg.vol / 6);
-    state.lastPrice = Math.max(0.0001, state.lastPrice + drift + impulse);
+  // const cfg = symbolConfig[symbol];
+  // const drift = (Math.random() - 0.5) * cfg.vol;
+  // const impulse = Math.sin(Date.now() / 5000) * (cfg.vol / 6);
+  // state.lastPrice = Math.max(0.0001, state.lastPrice + drift + impulse);
   }
+    async function getPrice() {
+      try {
+        const res = await fetch('/price');
+        const data = await res.json();
+        state.lastPrice = parseFloat(data.price);
+      } catch (err) {
+        console.error("Error obteniendo precio:", err);
+      }
+    }
 
   function ensureMinute(date) {
     const minuteStart = getMinuteStart(date).getTime();
@@ -879,7 +888,7 @@
 
   function updateData() {
     const now = new Date();
-    simulateTick();
+    getPrice();
     const minute = ensureMinute(now);
     minute.high = Math.max(minute.high, state.lastPrice);
     minute.low = Math.min(minute.low, state.lastPrice);
