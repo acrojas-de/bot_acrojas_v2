@@ -848,11 +848,13 @@
   }
     async function getPrice() {
       try {
-        const res = await fetch('/price');
+        const res = await fetch(`/price?symbol=${symbol}`);
         const data = await res.json();
         state.lastPrice = parseFloat(data.price);
+        return state.lastPrice;
       } catch (err) {
         console.error("Error obteniendo precio:", err);
+        return state.lastPrice;
       }
     }
 
@@ -886,14 +888,16 @@
     return state.minutes[slot];
   }
 
-  function updateData() {
-    const now = new Date();
-    getPrice();
-    const minute = ensureMinute(now);
-    minute.high = Math.max(minute.high, state.lastPrice);
-    minute.low = Math.min(minute.low, state.lastPrice);
-    minute.close = state.lastPrice;
-  }
+    async function updateData() {
+      const now = new Date();
+
+      await getPrice();   // 👈 ESTO ES LO IMPORTANTE
+
+      const minute = ensureMinute(now);
+      minute.high = Math.max(minute.high, state.lastPrice);
+      minute.low = Math.min(minute.low, state.lastPrice);
+      minute.close = state.lastPrice;
+    }
 
   function build5m() {
     const filled = state.minutes.filter(Boolean);
@@ -1408,16 +1412,16 @@
   // ========================================================
   // ⏱️ BLOQUE 9: LOOP PRINCIPAL
   // ========================================================
-  function tick() {
-    updateData();
-    updateTrailing();
-    renderClock();
-    renderCandles();
-    renderStats();
-    renderMeta();
-    renderTradePanel();
-    updateRiskBar();
-  }
+    async function tick() {
+      await updateData();
+      updateTrailing();
+      renderClock();
+      renderCandles();
+      renderStats();
+      renderMeta();
+      renderTradePanel();
+      updateRiskBar();
+    }
 
   setMode('SIM');
 
@@ -1431,8 +1435,10 @@
   updateRiskBar();
   renderHistory();
 
-  tick();
-  setInterval(tick, 1000);
+    tick();
+    setInterval(() => {
+      tick();
+    }, 1000);
 </script>
 </div>
 </body>
