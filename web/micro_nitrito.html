@@ -846,17 +846,24 @@
   // const impulse = Math.sin(Date.now() / 5000) * (cfg.vol / 6);
   // state.lastPrice = Math.max(0.0001, state.lastPrice + drift + impulse);
   }
-    async function getPrice() {
-      try {
-        const res = await fetch(`/price?symbol=${symbol}`);
-        const data = await res.json();
-        state.lastPrice = parseFloat(data.price);
-        return state.lastPrice;
-      } catch (err) {
-        console.error("Error obteniendo precio:", err);
-        return state.lastPrice;
-      }
+  
+async function getPrice() {
+  try {
+    const res = await fetch(`/price?symbol=${symbol}`);
+    const data = await res.json();
+
+    const price = parseFloat(data.price);
+    if (!Number.isFinite(price)) {
+      throw new Error('Precio inválido recibido desde /price');
     }
+
+    state.lastPrice = price;
+    return state.lastPrice;
+  } catch (err) {
+    console.error("Error obteniendo precio:", err);
+    return NaN;
+  }
+}
 
   function ensureMinute(date) {
     const minuteStart = getMinuteStart(date).getTime();
@@ -890,26 +897,36 @@
 
     async function updateData() {
       const now = new Date();
+      const price = await getPrice();
 
-      await getPrice();   // 👈 ESTO ES LO IMPORTANTE
+      if (!Number.isFinite(price)) return;
 
       const minute = ensureMinute(now);
+      if (!minute) return;
+
       minute.high = Math.max(minute.high, state.lastPrice);
       minute.low = Math.min(minute.low, state.lastPrice);
       minute.close = state.lastPrice;
     }
 
-  function build5m() {
-    const filled = state.minutes.filter(Boolean);
-    if (!filled.length) return null;
+    function build5m() {
+      const filled = state.minutes.filter(m =>
+        m &&
+        Number.isFinite(m.open) &&
+        Number.isFinite(m.high) &&
+        Number.isFinite(m.low) &&
+        Number.isFinite(m.close)
+      );
 
-    return {
-      open: filled[0].open,
-      high: Math.max(...filled.map(m => m.high)),
-      low: Math.min(...filled.map(m => m.low)),
-      close: filled[filled.length - 1].close,
-    };
-  }
+      if (!filled.length) return null;
+
+      return {
+        open: filled[0].open,
+        high: Math.max(...filled.map(m => m.high)),
+        low: Math.min(...filled.map(m => m.low)),
+        close: filled[filled.length - 1].close,
+      };
+    }
 
   function getRange() {
     const filled = state.minutes.filter(Boolean);
@@ -1088,37 +1105,54 @@
     drawTradeOverlay(range.min, range.max);
   }
 
-  function renderStats() {
-    const data5 = build5m();
-    if (!data5) return;
+    function renderStats() {
+      const data5 = build5m();
 
-    const change = data5.close - data5.open;
-    const pct = (change / data5.open) * 100;
+      if (
+        !data5 ||
+        !Number.isFinite(data5.open) ||
+        !Number.isFinite(data5.high) ||
+        !Number.isFinite(data5.low) ||
+        !Number.isFinite(data5.close) ||
+        data5.open === 0
+      ) {
+        document.getElementById('o5').textContent = '-';
+        document.getElementById('h5').textContent = '-';
+        document.getElementById('l5').textContent = '-';
+        document.getElementById('c5').textContent = '-';
+        document.getElementById('change5').textContent = '-';
+        document.getElementById('changePct5').textContent = '-';
+        return;
+      }
 
-    document.getElementById('o5').textContent = fmtPrice(data5.open);
-    document.getElementById('h5').textContent = fmtPrice(data5.high);
-    document.getElementById('l5').textContent = fmtPrice(data5.low);
-    document.getElementById('c5').textContent = fmtPrice(data5.close);
+      const change = data5.close - data5.open;
+      const pct = (change / data5.open) * 100;
 
-    const changeEl = document.getElementById('change5');
-    const pctEl = document.getElementById('changePct5');
-    changeEl.textContent = `${change >= 0 ? '+' : ''}${fmtPrice(change)}`;
-    pctEl.textContent = `${change >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
-    changeEl.style.color = pctEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+      document.getElementById('o5').textContent = fmtPrice(data5.open);
+      document.getElementById('h5').textContent = fmtPrice(data5.high);
+      document.getElementById('l5').textContent = fmtPrice(data5.low);
+      document.getElementById('c5').textContent = fmtPrice(data5.close);
 
-    const bullish = state.minutes.filter(m => m && m.close > m.open).length;
-    const bearish = state.minutes.filter(m => m && m.close < m.open).length;
-    const live = state.minutes.filter(m => m && m.live).length;
+      const changeEl = document.getElementById('change5');
+      const pctEl = document.getElementById('changePct5');
 
-    let flow = 'Mixto';
-    if (bullish >= 3 && bearish <= 1) flow = 'Sesgo alcista';
-    if (bearish >= 3 && bullish <= 1) flow = 'Sesgo bajista';
-    if (bullish === 5) flow = 'Impulso limpio';
-    if (bearish === 5) flow = 'Caída limpia';
+      changeEl.textContent = `${change >= 0 ? '+' : ''}${fmtPrice(change)}`;
+      pctEl.textContent = `${change >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+      changeEl.style.color = pctEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
 
-    document.getElementById('flowText').textContent = flow;
-    document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
-  }
+      const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
+      const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
+      const live = state.minutes.filter(m => m && m.live).length;
+
+      let flow = 'Mixto';
+      if (bullish >= 3 && bearish <= 1) flow = 'Sesgo alcista';
+      if (bearish >= 3 && bullish <= 1) flow = 'Sesgo bajista';
+      if (bullish === 5) flow = 'Impulso limpio';
+      if (bearish === 5) flow = 'Caída limpia';
+
+      document.getElementById('flowText').textContent = flow;
+      document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
+    }
 
   function renderClock() {
     const now = new Date();
@@ -1185,7 +1219,7 @@
   }
 
   function getCurrentCapital() {
-    return account.balance;
+    return Math.max(account.balance, 0);
   }
 
   function getRiskAmount() {
@@ -1209,45 +1243,62 @@
     ui.btnShort.classList.toggle('active-short', trade.isOpen && trade.side === 'SHORT');
   }
 
-  function openTrade(side) {
-    if (mode === 'REAL') {
-      alert('Modo REAL aún no conectado');
-      return;
+    function openTrade(side) {
+      if (mode === 'REAL') {
+        alert('Modo REAL aún no conectado');
+        return;
+      }
+
+      if (trade.isOpen) return;
+
+      if (account.balance <= 0) {
+        alert('Balance insuficiente para abrir nuevas operaciones');
+        return;
+      }
+
+      const data5 = build5m();
+      const live = state.minutes.filter(Boolean).slice(-1)[0];
+
+      if (
+        !data5 ||
+        !live ||
+        !Number.isFinite(data5.low) ||
+        !Number.isFinite(data5.high) ||
+        !Number.isFinite(state.lastPrice)
+      ) {
+        return;
+      }
+
+      const riskAmount = getRiskAmount();
+      let stop = null;
+
+      if (side === 'LONG') stop = Math.min(live.low, data5.low);
+      else stop = Math.max(live.high, data5.high);
+
+      const entry = state.lastPrice;
+      const distance = Math.abs(entry - stop);
+
+      if (!Number.isFinite(distance) || distance <= 0) return;
+
+      const size = riskAmount / distance;
+
+      trade.isOpen = true;
+      trade.side = side;
+      trade.entry = entry;
+      trade.stop = stop;
+      trade.tp1 = side === 'LONG'
+        ? entry + Math.max((entry - stop) * 1.5, 8)
+        : entry - Math.max((stop - entry) * 1.5, 8);
+      trade.trail = stop;
+      trade.size = size;
+      trade.riskAmount = riskAmount;
+      trade.bestPrice = entry;
+      trade.openedAt = Date.now();
+
+      updateButtonStates();
+      renderTradePanel();
+      updateRiskBar();
     }
-
-    if (trade.isOpen) return;
-
-    const data5 = build5m();
-    const live = state.minutes.filter(Boolean).slice(-1)[0];
-    if (!data5 || !live) return;
-
-    const riskAmount = getRiskAmount();
-    let stop = null;
-
-    if (side === 'LONG') stop = Math.min(live.low, data5.low);
-    else stop = Math.max(live.high, data5.high);
-
-    const entry = state.lastPrice;
-    const distance = Math.abs(entry - stop);
-    const size = distance > 0 ? riskAmount / distance : 0;
-
-    trade.isOpen = true;
-    trade.side = side;
-    trade.entry = entry;
-    trade.stop = stop;
-    trade.tp1 = side === 'LONG'
-      ? entry + Math.max((entry - stop) * 1.5, 8)
-      : entry - Math.max((stop - entry) * 1.5, 8);
-    trade.trail = stop;
-    trade.size = size;
-    trade.riskAmount = riskAmount;
-    trade.bestPrice = entry;
-    trade.openedAt = Date.now();
-
-    updateButtonStates();
-    renderTradePanel();
-    updateRiskBar();
-  }
 
   function closeTrade() {
     if (trade.isOpen) {
