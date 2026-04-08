@@ -459,6 +459,93 @@
       width: 100%;
       appearance: none;
     }
+    
+    .time-compact-wrap {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+    }
+
+    .time-5m-col {
+      width: 42px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .time-5m-bar-shell {
+      width: 22px;
+      height: 120px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .time-5m-bar-fill {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(180deg, rgba(34,197,94,.95), rgba(56,189,248,.95));
+      transition: height .25s ease;
+    }
+
+    .time-5m-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .time-compact-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .time-compact-title {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .time-compact-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    
+    .second-scale {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--muted);
+      opacity: .9;
+      pointer-events: none;
+    }
+
+    .second-marker {
+      position: absolute;
+      bottom: 18px;
+      width: 2px;
+      height: 12px;
+      background: rgba(56,189,248,.95);
+      border-radius: 999px;
+      pointer-events: none;
+    }
+    
+    
   </style>
 </head>
 <body>
@@ -548,10 +635,20 @@
         <div class="clock" id="clock">00:00:00</div>
         <div class="clock-sub" id="tzLabel">(local)</div>
       </div>
+
       <div class="card count-card">
-        <div class="count-box">
-          <div class="count-label">Cierra vela 1m / 5m</div>
-          <div class="count-value" id="countdowns">00:00 / 00:00</div>
+        <div class="time-compact-wrap">
+          <div class="time-5m-col">
+            <div class="time-5m-bar-shell">
+              <div id="bar5m" class="time-5m-bar-fill"></div>
+            </div>
+            <div id="time5mLabel" class="time-5m-label">05:00</div>
+          </div>
+
+          <div class="time-compact-info">
+            <div class="time-compact-title">Bloque actual</div>
+            <div id="timeText" class="time-compact-text">Minuto actual en curso</div>
+          </div>
         </div>
       </div>
     </div>
@@ -928,18 +1025,28 @@ async function getPrice() {
       };
     }
 
-  function getRange() {
-    const filled = state.minutes.filter(Boolean);
-    if (!filled.length) {
-      return { min: state.lastPrice - 50, max: state.lastPrice + 50 };
-    }
+function getRange() {
+  const filled = state.minutes.filter(m =>
+    m &&
+    Number.isFinite(m.low) &&
+    Number.isFinite(m.high)
+  );
 
-    let min = Math.min(...filled.map(m => m.low));
-    let max = Math.max(...filled.map(m => m.high));
-    const padRange = Math.max((max - min) * 0.14, 20);
-
-    return { min: min - padRange, max: max + padRange };
+  if (!filled.length || !Number.isFinite(state.lastPrice)) {
+    return { min: 0, max: 100 };
   }
+
+  let min = Math.min(...filled.map(m => m.low));
+  let max = Math.max(...filled.map(m => m.high));
+
+  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
+    min = state.lastPrice - 50;
+    max = state.lastPrice + 50;
+  }
+
+  const padRange = Math.max((max - min) * 0.14, 20);
+  return { min: min - padRange, max: max + padRange };
+}
 
   function yScale(price, min, max, height) {
     return ((max - price) / (max - min)) * height;
@@ -1066,13 +1173,31 @@ async function getPrice() {
 
       const cls = classifyCandle(candle);
 
-      if (candle.live) {
-        col.classList.add('live-col');
-        const badge = document.createElement('span');
-        badge.className = 'live-badge';
-        badge.textContent = 'EN CURSO';
-        head.appendChild(badge);
-      }
+    if (candle.live) {
+      col.classList.add('live-col');
+
+      const badge = document.createElement('span');
+      badge.className = 'live-badge';
+      badge.textContent = 'EN CURSO';
+      head.appendChild(badge);
+
+      const secondScale = document.createElement('div');
+      secondScale.className = 'second-scale';
+      secondScale.innerHTML = `
+        <span>00</span>
+        <span>15</span>
+        <span>30</span>
+        <span>45</span>
+        <span>60</span>
+      `;
+
+      const secondMarker = document.createElement('div');
+      secondMarker.className = 'second-marker';
+      secondMarker.style.left = `calc(${(new Date().getSeconds() / 60) * 100}% - 1px)`;
+
+      body.appendChild(secondScale);
+      body.appendChild(secondMarker);
+    }
 
       const h = body.clientHeight || 340;
       const yHigh = yScale(candle.high, range.min, range.max, h);
@@ -1154,23 +1279,42 @@ async function getPrice() {
       document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
     }
 
-  function renderClock() {
-    const now = new Date();
-    document.getElementById('clock').textContent =
-      `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    function renderClock() {
+      const now = new Date();
 
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
-    document.getElementById('tzLabel').textContent = `(${tz})`;
+      document.getElementById('clock').textContent =
+        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-    const s1 = secondsToNextMinute(now);
-    const s5 = secondsToNext5m(now);
-    const one = `${pad(Math.floor(s1 / 60))}:${pad(s1 % 60)}`;
-    const five = `${pad(Math.floor(s5 / 60))}:${pad(s5 % 60)}`;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+      document.getElementById('tzLabel').textContent = `(${tz})`;
 
-    document.getElementById('countdowns').textContent = `${one} / ${five}`;
-    document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${one}`;
-    document.getElementById('minuteProgress').style.width = `${(now.getSeconds() / 60) * 100}%`;
-  }
+      const sec = now.getSeconds();
+      const minIn5 = now.getMinutes() % 5;
+
+      const secondsToNext1m = 60 - sec;
+      const secondsToNext5m = (4 - minIn5) * 60 + (60 - sec);
+
+      const progress1m = sec / 60;
+      const progress5m = ((minIn5 * 60) + sec) / 300;
+
+      const bar = document.getElementById('bar5m');
+      if (bar) {
+        bar.style.height = `${progress5m * 100}%`;
+      }
+
+      const time5mLabel = document.getElementById('time5mLabel');
+      if (time5mLabel) {
+        time5mLabel.textContent = `${Math.floor(secondsToNext5m / 60)}:${pad(secondsToNext5m % 60)}`;
+      }
+
+      const text = document.getElementById('timeText');
+      if (text) {
+        text.textContent = `1m en curso · ${secondsToNext1m}s restantes`;
+      }
+
+      document.getElementById('minuteProgress').style.width = `${progress1m * 100}%`;
+      document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${secondsToNext1m}s`;
+    }
 
   function renderMeta() {
     document.getElementById('latency').textContent =
