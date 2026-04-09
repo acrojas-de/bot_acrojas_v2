@@ -218,7 +218,22 @@ def get_spot_alerts(client):
                 alerts.append(f"⚠️ {p['asset']} {p['pnl_pct']}% | STOP LOSS")
 
         return alerts
+        
+# ================================
+# 👉 🚀 ORDEN REAL MARKET
+# ================================
+def place_market_order(client, symbol, side, quantity):
+    try:
+        order = client.create_order(
+            symbol=symbol,
+            side=side,          # "BUY" o "SELL"
+            type="MARKET",
+            quantity=quantity
+        )
+
+        print(f"✅ Orden enviada a Binance: {order}")
+        return order
 
     except Exception as e:
-        print(f"Error alerts: {e}")
-        return []
+        print(f"❌ Error enviando orden a Binance: {e}")
+        return None

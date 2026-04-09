@@ -3,11 +3,16 @@ echo =========================
 echo 🚀 Deploy a Railway
 echo =========================
 
+git status
+
+echo.
+set /p msg=Escribe el mensaje del commit: 
+
 git add .
-git commit -m "deploy update"
+git commit -m "%msg%"
 git push
 
 echo.
 echo ✅ Codigo subido a GitHub
-echo Railway se encargara del deploy automaticamente
+echo 🚀 Railway desplegara automaticamente
 pause

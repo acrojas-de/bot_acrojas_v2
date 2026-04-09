@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
-from app.binance_client import get_balance
+from app.binance_client import get_balance, get_spot_portfolio
 
 from app.bootstrap import bootstrap
 from app.market.market_cycle import run_market_cycle
@@ -405,15 +405,54 @@ try:
 
     try:
         balances = get_balance(client)
+        portfolio = get_spot_portfolio(client)
 
-        if balances:
-            for b in balances:
-                st.write(f"{b['asset']}: {b['free']} disponible")
+        # -------- RESUMEN RÁPIDO --------
+        total_usdt = 0.0
+        usdt_free = 0.0
+        btc_qty = 0.0
+
+        if portfolio:
+            total_usdt = sum(float(item.get("value_usdt", 0) or 0) for item in portfolio)
+
+            for item in portfolio:
+                if item.get("asset") == "USDT":
+                    usdt_free = float(item.get("quantity", 0) or 0)
+                if item.get("asset") == "BTC":
+                    btc_qty = float(item.get("quantity", 0) or 0)
+
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            st.metric("Valor total cartera", f"{total_usdt:.2f} USDT")
+
+        with c2:
+            st.metric("USDT disponible", f"{usdt_free:.2f}")
+
+        with c3:
+            st.metric("BTC en cartera", f"{btc_qty:.6f}")
+
+        # -------- BALANCES CRUDOS --------
+        with st.expander("Ver balances disponibles"):
+            if balances:
+                for b in balances:
+                    st.write(
+                        f"{b['asset']}: free={float(b['free']):.8f} | locked={float(b['locked']):.8f}"
+                    )
+            else:
+                st.warning("No se encontraron balances disponibles en la cuenta.")
+
+        # -------- CARTERA VALORADA --------
+        st.markdown("#### 📊 Cartera Spot valorada en USDT")
+
+        if portfolio:
+            portfolio_df = pd.DataFrame(portfolio)
+            st.dataframe(portfolio_df, width="stretch", hide_index=True)
         else:
-            st.warning("No se encontraron balances disponibles en la cuenta.")
+            st.info("No hay activos valorables en cartera Spot.")
 
     except Exception as e:
-        st.error(f"Error obteniendo balance de Binance: {e}")
+        st.error(f"Error obteniendo balance/cartera de Binance: {e}")
 
     # =========================================================
     # BLOQUE 2 · CONTEXTO RÁPIDO

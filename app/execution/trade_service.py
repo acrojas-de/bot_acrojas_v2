@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.binance_client import place_market_order
 import uuid
 
 
@@ -98,7 +99,7 @@ def execute_trade(
     market_mode: str = "SPOT",
     execution_mode: str = "SIMULATED",
     klines_df=None,
-    quantity: float = 0.001,
+    quantity: float = 0.0001,
     rr: float = 2.0,
     buffer_pct: float = 0.0015,
 ) -> dict:
@@ -184,6 +185,29 @@ def execute_trade(
         quantity=quantity,
         mode=execution_mode,
     )
+    
+    # ========================================================
+    # 🚀 EJECUCIÓN REAL EN BINANCE
+    # ========================================================
+    if execution_mode == "REAL":
+        side_binance = "BUY" if side == "LONG" else "SELL"
+
+        order = place_market_order(
+            client=client,
+            symbol=symbol,
+            side=side_binance,
+            quantity=quantity,
+        )
+
+        if not order:
+            return {
+                "ok": False,
+                "message": "Error ejecutando orden real en Binance",
+                "trade": None,
+            }
+
+        trade["binance_order"] = order
+        trade["status"] = "FILLED"
 
     trade["setup_type"] = (
         state.signal.get("decision_report", {}).get("setup_type", "N/A")
