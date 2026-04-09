@@ -3,51 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Panel Microvelas 1m dentro de 5m</title>
+  <title>MICRO NITRITO · Adaptado</title>
   <style>
     :root {
-      --bg: #0b1020;
-      --card: #121a30;
-      --line: #23304f;
+      --bg: #08101f;
+      --bg2: #050b16;
+      --card: rgba(14, 24, 46, 0.94);
+      --card-soft: rgba(12, 20, 38, 0.9);
+      --line: rgba(148, 163, 184, 0.14);
       --text: #e5e7eb;
-      --muted: #94a3b8;
+      --muted: #92a1bd;
       --green: #22c55e;
       --red: #ef4444;
-      --amber: #f59e0b;
+      --amber: #facc15;
       --cyan: #38bdf8;
       --white: #ffffff;
+      --shadow: 0 14px 32px rgba(0,0,0,.28);
+      --radius: 18px;
     }
 
     * { box-sizing: border-box; }
+    html, body { height: 100%; }
     body {
       margin: 0;
-      background: radial-gradient(circle at top, #14203d 0%, #0b1020 48%, #070b16 100%);
       color: var(--text);
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, #16264a 0%, #0b1430 34%, #07101f 68%, #050913 100%);
     }
 
     .wrap {
-      max-width: 1380px;
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 20px;
-    }
-
-    .top-grid {
-      display: grid;
-      grid-template-columns: 320px 1fr 1fr 520px;
-      gap: 16px;
-      align-items: stretch;
+      padding: 18px;
     }
 
     .card {
-      background: linear-gradient(180deg, rgba(18,26,48,.98), rgba(11,16,32,.98));
-      border: 1px solid rgba(148,163,184,.14);
-      border-radius: 18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+      background: linear-gradient(180deg, rgba(14,24,46,.98), rgba(7,13,27,.98));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    /* ========= TOP GRID ========= */
+    .top-grid {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr) 390px;
+      gap: 14px;
+      align-items: stretch;
     }
 
     .controls {
-      padding: 16px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 14px;
@@ -56,433 +63,160 @@
     .toggle-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .02em;
     }
 
     .switch {
-      width: 52px;
-      height: 28px;
+      width: 44px;
+      height: 24px;
       border-radius: 999px;
       position: relative;
-      background: #2b3348;
-      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(239,68,68,.86);
+      border: 1px solid rgba(255,255,255,.1);
     }
-    .switch.on { background: rgba(239,68,68,.85); }
     .switch::after {
       content: "";
       position: absolute;
-      width: 20px;
-      height: 20px;
-      top: 3px;
-      left: 3px;
+      top: 2px;
+      left: 22px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      background: white;
-      transition: .2s ease;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,.28);
     }
-    .switch.on::after { left: 27px; }
 
     .section-label {
       color: var(--muted);
+      font-size: 13px;
       margin-bottom: 8px;
-      font-size: 14px;
     }
 
-    .pill-group, .mode-group {
+    .mode-group, .pill-group {
       display: flex;
       gap: 8px;
     }
 
-    .pill, .mode-btn {
-      padding: 10px 14px;
+    .mode-btn, .pill, .field-like {
+      min-height: 42px;
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,.08);
       background: rgba(255,255,255,.03);
       color: var(--text);
-      min-width: 92px;
-      display: flex;
+      padding: 0 14px;
+      font-weight: 800;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+    }
+
+    .mode-btn {
       cursor: pointer;
-      font-weight: 700;
+      min-width: 74px;
     }
 
     .mode-btn.active {
-      background: rgba(56,189,248,.88);
-      color: #03111f;
-      border-color: rgba(56,189,248,.95);
+      background: linear-gradient(180deg, rgba(56,189,248,.92), rgba(34,197,94,.82));
+      color: #05111d;
+      border-color: rgba(255,255,255,.18);
     }
 
-    .dot {
-      width: 14px; height: 14px; border-radius: 50%;
-      border: 2px solid rgba(255,255,255,.7);
-    }
-    .dot.red { background: #ff6659; border-color: #ff6659; }
-
-    .action {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: .2px;
-      min-height: 72px;
-      cursor: pointer;
-      border: none;
-      color: var(--white);
-    }
-    .action.long {
-      background: linear-gradient(180deg, rgba(34,197,94,.75), rgba(21,128,61,.75));
-      border: 1px solid rgba(74,222,128,.34);
-    }
-    .action.short {
-      background: linear-gradient(180deg, rgba(239,68,68,.78), rgba(185,28,28,.78));
-      border: 1px solid rgba(248,113,113,.34);
-    }
-    .action.active-long {
-      box-shadow: 0 0 0 2px rgba(56,189,248,.55), 0 12px 36px rgba(34,197,94,.25);
-    }
-    .action.active-short {
-      box-shadow: 0 0 0 2px rgba(56,189,248,.55), 0 12px 36px rgba(239,68,68,.25);
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: 1fr 1.2fr .9fr 1.1fr;
-      gap: 0;
-      min-height: 92px;
-      overflow: hidden;
-    }
-    .stat-box {
-      padding: 18px 22px;
-      border-right: 1px solid rgba(255,255,255,.08);
-    }
-    .stat-box:last-child { border-right: none; }
-    .stat-title {
-      color: var(--muted);
-      font-size: 14px;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
-    .ohlc { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; font-size: 15px; }
-    .ohlc .g { color: var(--green); }
-    .ohlc .r { color: var(--red); }
-    .big { font-size: 20px; font-weight: 700; }
-
-    .time-row {
-      display: grid;
-      grid-template-columns: 1.2fr 320px;
-      gap: 16px;
-      margin-top: 16px;
-    }
-    .clock-card, .count-card {
-      min-height: 96px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px 22px;
-    }
-    .clock {
-      font-size: 74px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-    .clock-sub { color: var(--muted); margin-left: 14px; font-size: 28px; }
-    .count-box { text-align: center; }
-    .count-label { color: var(--muted); font-size: 15px; margin-bottom: 6px; }
-    .count-value { color: var(--green); font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; }
-
-    .trade-panel {
-      margin-top: 16px;
-      padding: 16px 18px;
-      display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr 1fr 1fr auto;
-      gap: 12px;
-      align-items: center;
-    }
-    .trade-box-label {
-      color: var(--muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 6px;
-    }
-    .trade-box-value {
-      font-size: 18px;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
-    }
-    .trade-side-long { color: var(--green); }
-    .trade-side-short { color: var(--red); }
-    .trade-side-flat { color: var(--muted); }
-    .mini-btn {
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.03);
-      color: var(--text);
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .panel { margin-top: 16px; padding: 18px; }
-    .panel-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    .panel-title {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: .04em;
-    }
-    .panel-sub { color: var(--muted); }
-
-    .risk-bar {
-      margin-bottom: 12px;
-      padding: 10px 14px;
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(10,18,40,.96), rgba(8,14,30,.96));
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    .risk-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 10px;
-      align-items: center;
-    }
-    .risk-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-    .risk-item span {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .05em;
-    }
-    .risk-item strong {
-      font-size: 15px;
-      color: var(--text);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .risk-item input {
-      height: 34px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.04);
-      color: var(--text);
-      padding: 0 10px;
-      outline: none;
-      font-size: 14px;
-    }
-    .pnl-positive { color: var(--green) !important; }
-    .pnl-negative { color: var(--red) !important; }
-    .pnl-neutral { color: #cbd5e1 !important; }
-
-    .micro-wrap {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr) 90px;
-      gap: 0;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
-      overflow: hidden;
-      background: rgba(3,7,18,.35);
-      min-height: 390px;
-    }
-    .minute-col {
-      position: relative;
-      border-right: 1px solid rgba(255,255,255,.08);
-      background-image: linear-gradient(to bottom, rgba(255,255,255,.04) 1px, transparent 1px);
-      background-size: 100% 20%;
-    }
-    .minute-col:last-child { border-right: none; }
-    .minute-head {
-      height: 48px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text);
-      font-weight: 700;
-      gap: 8px;
-    }
-    .live-badge {
-      color: var(--green);
-      background: rgba(34,197,94,.12);
-      border: 1px solid rgba(34,197,94,.35);
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-    }
-    .minute-body {
-      position: relative;
-      height: 340px;
-    }
-    .wick {
-      position: absolute;
-      width: 2px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: currentColor;
-      border-radius: 999px;
-    }
-    .candle {
-      position: absolute;
-      width: 78px;
-      left: 50%;
-      transform: translateX(-50%);
-      border-radius: 8px;
-      border: 2px solid currentColor;
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(2px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .green { color: var(--green); background: rgba(34,197,94,.18); }
-    .red { color: var(--red); background: rgba(239,68,68,.18); }
-    .neutral { color: #cbd5e1; background: rgba(148,163,184,.08); }
-    .live-col { outline: 2px dashed rgba(34,197,94,.45); outline-offset: -10px; }
-
-    .price-tag {
-      position: absolute;
-      right: 18px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(255,255,255,.08);
-    }
-    .axis {
-      position: relative;
-      padding-top: 48px;
-      background: rgba(255,255,255,.02);
-    }
-    .five-preview {
-      position: absolute;
-      inset: 48px 0 0 0;
-      pointer-events: none;
-    }
-    .five-preview-wick {
-      position: absolute;
-      width: 3px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: currentColor;
-      border-radius: 999px;
-      opacity: .95;
-    }
-    .five-preview-body {
-      position: absolute;
-      width: 46px;
-      left: 50%;
-      transform: translateX(-50%);
-      border-radius: 10px;
-      border: 2px solid currentColor;
-      background: rgba(255,255,255,.08);
-      box-shadow: 0 0 18px rgba(0,0,0,.18);
-    }
-    .five-preview-label {
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .04em;
-      color: var(--text);
-      background: rgba(15,23,42,.88);
-      border: 1px solid rgba(255,255,255,.08);
-      white-space: nowrap;
-    }
-    .axis-item {
-      height: 68px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-
-    .footer-row {
-      display: grid;
-      grid-template-columns: 1fr auto auto auto;
-      gap: 18px;
-      align-items: center;
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .progress {
-      height: 8px;
-      border-radius: 999px;
-      background: rgba(255,255,255,.08);
-      overflow: hidden;
-    }
-    .progress > div {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, rgba(34,197,94,.8), rgba(56,189,248,.8));
-    }
-
-    @media (max-width: 1200px) {
-      .top-grid { grid-template-columns: 1fr 1fr; }
-      .time-row { grid-template-columns: 1fr; }
-      .risk-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    }
-
-    @media (max-width: 900px) {
-      .top-grid { grid-template-columns: 1fr; }
-      .micro-wrap { grid-template-columns: repeat(5, minmax(180px, 1fr)); overflow-x: auto; }
-      .axis { display: none; }
-      .clock { font-size: 54px; }
-      .trade-panel { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    @media (max-width: 700px) {
-      .risk-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    
     select.mode-btn {
       width: 100%;
       appearance: none;
+      justify-content: flex-start;
     }
-    
-    .time-compact-wrap {
+
+    .pill {
+      min-width: 96px;
+      justify-content: flex-start;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.7);
+      background: transparent;
+    }
+    .dot.red { background: #ff6659; border-color: #ff6659; }
+
+    .top-center-card {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .top-center-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 64px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .top-clock-wrap {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 98px;
+    }
+
+    .clock {
+      font-size: 60px;
+      font-weight: 900;
+      line-height: .94;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .02em;
+    }
+
+    .clock-sub {
+      margin-top: 8px;
+      font-size: 20px;
+      color: #c1cbe0;
+    }
+
+    .thermo-wrap {
       display: flex;
       align-items: center;
-      gap: 16px;
-      width: 100%;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .thermo-scale {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 118px;
+      font-size: 11px;
+      color: var(--muted);
     }
 
     .time-5m-col {
-      width: 42px;
+      width: 34px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
     .time-5m-bar-shell {
       width: 22px;
-      height: 120px;
+      height: 118px;
       border-radius: 999px;
-      background: rgba(255,255,255,.08);
+      background:
+        linear-gradient(to top,
+          transparent 0%, transparent 19%, rgba(255,255,255,.12) 20%, transparent 21%,
+          transparent 39%, rgba(255,255,255,.12) 40%, transparent 41%,
+          transparent 59%, rgba(255,255,255,.12) 60%, transparent 61%,
+          transparent 79%, rgba(255,255,255,.12) 80%, transparent 81%),
+        rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.08);
       overflow: hidden;
       position: relative;
-      border: 1px solid rgba(255,255,255,.08);
     }
 
     .time-5m-bar-fill {
@@ -491,37 +225,389 @@
       bottom: 0;
       width: 100%;
       height: 0%;
-      background: linear-gradient(180deg, rgba(34,197,94,.95), rgba(56,189,248,.95));
-      transition: height .25s ease;
+      background: linear-gradient(180deg, #2ee689, #38bdf8);
     }
 
     .time-5m-label {
-      font-size: 13px;
-      font-weight: 800;
-      color: var(--green);
+      font-size: 11px;
+      font-weight: 900;
+      color: #59f0a3;
       font-variant-numeric: tabular-nums;
     }
 
-    .time-compact-info {
+    .top-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(150px, 180px));
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .action, .top-close-btn, .mini-btn {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      color: var(--white);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .action {
+      min-height: 54px;
+      font-size: 17px;
+      letter-spacing: .02em;
+      width: 100%;
+    }
+
+    .action.long {
+      background: linear-gradient(180deg, rgba(34,197,94,.86), rgba(24,120,61,.86));
+    }
+
+    .action.short {
+      background: linear-gradient(180deg, rgba(239,68,68,.88), rgba(165,28,28,.88));
+    }
+
+    .action.active-long {
+      box-shadow: 0 0 0 2px rgba(56,189,248,.55), 0 14px 28px rgba(34,197,94,.22);
+    }
+
+    .action.active-short {
+      box-shadow: 0 0 0 2px rgba(56,189,248,.55), 0 14px 28px rgba(239,68,68,.22);
+    }
+
+    .top-close-btn, .mini-btn {
+      min-height: 38px;
+      background: rgba(255,255,255,.035);
+      color: #dbe7ff;
+    }
+
+    .top-close-btn {
+      width: min(100%, 370px);
+      align-self: center;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: .92fr 1.18fr .95fr 1.35fr;
+      overflow: hidden;
+      min-height: 100%;
+    }
+
+    .stat-box {
+      padding: 16px 14px;
+      border-right: 1px solid rgba(255,255,255,.08);
+      min-width: 0;
+    }
+    .stat-box:last-child { border-right: none; }
+
+    .stat-title {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .big {
+      font-size: 17px;
+      font-weight: 900;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .ohlc {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 7px 8px;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+    .ohlc .g { color: var(--green); }
+    .ohlc .r { color: var(--red); }
+    #flowText {
+      font-size: 16px;
+      line-height: 1.15;
+    }
+
+    #flowSub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+
+    /* ========= BODY ========= */
+    .body-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .trade-panel {
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .trade-cell {
+      background: rgba(255,255,255,.02);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.05);
+      padding: 8px 12px;
+      min-height: 64px;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: 6px;
-      min-width: 0;
     }
 
-    .time-compact-title {
+    .trade-box-label {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
-    .time-compact-text {
+    .trade-box-value {
+      font-size: 17px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .trade-side-long { color: var(--green); }
+    .trade-side-short { color: var(--red); }
+    .trade-side-flat { color: #ced8ee; }
+
+    .visor-card {
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(8,12,24,.98), rgba(3,6,14,.98));
+    }
+
+    .visor-slot {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .visor-bar {
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+    .visor-bar.go { background: linear-gradient(90deg, #0f611f, #64d957, #d73737); }
+    .visor-bar.wait { background: linear-gradient(90deg, #1d7a1b, #6ddd56 52%, #c62828 52%, #c62828); }
+    .visor-bar.no { background: linear-gradient(90deg, #d02828, #ea4a4a); }
+
+    .visor-light {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,.35);
+      box-shadow: 0 0 0 2px rgba(255,255,255,.08);
+    }
+    .visor-light.go { background: radial-gradient(circle at 35% 30%, #34f18d, #12a74d); }
+    .visor-light.wait { background: radial-gradient(circle at 35% 30%, #ffe16a, #dfaa00); }
+    .visor-light.no { background: radial-gradient(circle at 35% 30%, #ffd9d9, #ff9f9f 30%, #f34b4b 70%); }
+
+    .visor-label {
+      min-width: 84px;
+      height: 36px;
+      border-radius: 4px;
+      background: #fff;
+      color: #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
       font-size: 18px;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1.2;
+      letter-spacing: .02em;
     }
     
+    /* ========================================================
+       🚦 BLOQUE 4: ESTADOS VISUALES DEL SEMÁFORO
+       ======================================================== */
+    .visor-slot {
+      opacity: .35;
+      transition: opacity .18s ease, transform .18s ease, filter .18s ease;
+    }
+
+    .visor-slot.is-active {
+      opacity: 1;
+      transform: scale(1.02);
+      filter: saturate(1.08);
+    }
+
+    .visor-slot.go.is-active .visor-light {
+      box-shadow: 0 0 18px rgba(34,197,94,.65);
+    }
+
+    .visor-slot.wait.is-active .visor-light {
+      box-shadow: 0 0 18px rgba(250,204,21,.55);
+    }
+
+    .visor-slot.no.is-active .visor-light {
+      box-shadow: 0 0 18px rgba(239,68,68,.65);
+    }
+
+    .panel {
+      padding: 12px 12px 14px;
+    }
+
+    .micro-shell {
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 0;
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+    }
+
+    .micro-wrap {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr) 92px;
+      min-height: 360px;
+      background: rgba(255,255,255,.02);
+    }
+
+    .minute-col, .axis {
+      position: relative;
+      border-right: 1px solid rgba(0,0,0,.28);
+      background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
+    }
+    .minute-col:last-child, .axis:last-child { border-right: none; }
+
+    .minute-head {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255,255,255,.92);
+      color: #111827;
+      border-bottom: 1px solid rgba(0,0,0,.18);
+      font-weight: 800;
+    }
+
+    .minute-body {
+      position: relative;
+      height: 260px;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,.12) 1px, transparent 1px),
+        rgba(255,255,255,.85);
+      background-size: 100% 25%;
+    }
+
+    .minute-col.live-col .minute-head {
+      color: #14a44d;
+    }
+
+    .live-badge {
+      color: #0f8f3d;
+      background: rgba(34,197,94,.12);
+      border: 1px solid rgba(34,197,94,.35);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .wick {
+      position: absolute;
+      width: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: currentColor;
+      border-radius: 999px;
+      opacity: .95;
+    }
+
+    .candle {
+      position: absolute;
+      width: 46%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 10px;
+      border: none;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.22);
+    }
+
+    .green { color: #0b8c36; background: linear-gradient(180deg, rgba(104,214,78,.88), rgba(58,161,37,.94)); }
+    .red { color: #d10000; background: linear-gradient(180deg, rgba(255,66,66,.94), rgba(224,0,0,.88)); }
+    .neutral { color: #5d6679; background: rgba(148,163,184,.25); }
+
+    .price-tag {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 10px;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1;
+      background: transparent;
+      white-space: nowrap;
+    }
+
+    .axis {
+      background: rgba(255,255,255,.9);
+      padding-top: 46px;
+    }
+
+    .axis-item {
+      height: 53px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4b5563;
+      font-variant-numeric: tabular-nums;
+      border-bottom: 1px solid rgba(0,0,0,.12);
+      font-size: 12px;
+    }
+
+    .five-preview {
+      position: absolute;
+      inset: 46px 0 0 0;
+      pointer-events: none;
+      background: rgba(255,255,255,.88);
+    }
+
+    .five-preview-label {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 900;
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .five-preview-wick {
+      position: absolute;
+      width: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: currentColor;
+      border-radius: 999px;
+    }
+
+    .five-preview-body {
+      position: absolute;
+      width: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 10px;
+      border: none;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.2);
+      background: rgba(255,255,255,.12);
+    }
+
     .second-scale {
       position: absolute;
       left: 10px;
@@ -530,8 +616,7 @@
       display: flex;
       justify-content: space-between;
       font-size: 10px;
-      color: var(--muted);
-      opacity: .9;
+      color: #4b5563;
       pointer-events: none;
     }
 
@@ -544,22 +629,133 @@
       border-radius: 999px;
       pointer-events: none;
     }
-    
-    
+
+    .micro-info-card {
+      margin-top: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: linear-gradient(180deg, rgba(7,10,20,.98), rgba(0,0,0,.96));
+    }
+
+    .micro-info-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #dbe7ff;
+      font-weight: 800;
+    }
+
+    .micro-title-chip {
+      padding: 8px 12px;
+      border-radius: 0;
+      background: rgba(255,255,255,.06);
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .micro-info-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .micro-info-item {
+      background: rgba(255,255,255,.02);
+      border: 1px solid rgba(255,255,255,.05);
+      min-height: 62px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .micro-info-item span {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 5px;
+    }
+
+    .micro-info-item strong {
+      font-size: 15px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .footer-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 16px;
+      align-items: center;
+      padding: 0 2px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .footer-progress-card {
+      padding: 12px 14px;
+    }
+
+    .progress {
+      margin-top: 8px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(34,197,94,.84), rgba(56,189,248,.92));
+    }
+
+    .status-box {
+      min-width: 116px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      color: #dce7ff;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .pnl-positive { color: var(--green) !important; }
+    .pnl-negative { color: var(--red) !important; }
+    .pnl-neutral { color: #cbd5e1 !important; }
+
+    .hidden-history { display: none; }
+
+    @media (max-width: 1100px) {
+      .top-grid { grid-template-columns: 1fr; }
+      .trade-panel { grid-template-columns: repeat(3, 1fr); }
+      .micro-info-grid { grid-template-columns: repeat(3, 1fr); }
+      .footer-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .trade-panel { grid-template-columns: repeat(2, 1fr); }
+      .visor-card { grid-template-columns: 1fr; }
+      .micro-wrap { grid-template-columns: repeat(5, minmax(180px, 1fr)); overflow-x: auto; }
+      .axis { display: none; }
+      .micro-info-grid { grid-template-columns: repeat(2, 1fr); }
+      .clock { font-size: 44px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
-
-  <!-- ========================================================= -->
-  <!-- 🛵 BLOQUE 1: CONTROLES SUPERIORES -->
-  <!-- ========================================================= -->
   <div class="top-grid">
-
     <div class="card controls">
       <div class="toggle-row">
         <div class="switch on"></div>
-        <div style="font-size: 16px; font-weight: 700;">AUTO</div>
+        <div>AUTO</div>
       </div>
 
       <div>
@@ -584,27 +780,43 @@
       <div>
         <div class="section-label">Mercado</div>
         <div class="pill-group">
-          <div class="pill"><span class="dot"></span> SPOT</div>
-          <div class="pill"><span class="dot red"></span> FUTURES</div>
+          <div class="pill"><span class="dot"></span>SPOT</div>
+          <div class="pill"><span class="dot red"></span>FUTURES</div>
         </div>
       </div>
     </div>
 
-    <!-- ========================================================= -->
-    <!-- 🚀 BLOQUE 2: BOTONES DE ACCIÓN -->
-    <!-- ========================================================= -->
-    <button id="btnLong" class="card action long" type="button">🚀 LONG</button>
-    <button id="btnShort" class="card action short" type="button">🔻 SHORT</button>
+    <div class="card top-center-card">
+      <div class="top-center-top">
+        <div class="top-clock-wrap">
+          <div class="clock" id="clock">00:00:00</div>
+          <div class="clock-sub" id="tzLabel">(Europe/Madrid)</div>
+        </div>
 
-    <!-- ========================================================= -->
-    <!-- 📊 BLOQUE 3: PANEL DE ESTADÍSTICAS -->
-    <!-- ========================================================= -->
+        <div class="thermo-wrap">
+          <div class="thermo-scale">
+            <span>5m</span><span>4m</span><span>3m</span><span>2m</span><span>1m</span>
+          </div>
+          <div class="time-5m-col">
+            <div class="time-5m-bar-shell"><div id="bar5m" class="time-5m-bar-fill"></div></div>
+            <div id="time5mLabel" class="time-5m-label">05:00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btnLong" class="action long" type="button">🚀 LONG</button>
+        <button id="btnShort" class="action short" type="button">🔻 SHORT</button>
+      </div>
+
+      <button id="btnCloseTradeTop" class="top-close-btn" type="button">🚪 Cerrar operación</button>
+    </div>
+
     <div class="card stats">
       <div class="stat-box">
         <div class="stat-title">Símbolo</div>
         <div id="symbolLabel" class="big">BTCUSDT</div>
       </div>
-
       <div class="stat-box">
         <div class="stat-title">5m actual</div>
         <div class="ohlc">
@@ -614,195 +826,136 @@
           <div>C</div><div id="c5">-</div>
         </div>
       </div>
-
       <div class="stat-box">
         <div class="stat-title">Cambio</div>
         <div id="change5" class="big">-</div>
-        <div id="changePct5" style="margin-top: 8px; font-size: 18px;"></div>
+        <div id="changePct5" style="margin-top:8px;font-size:18px;font-weight:800;">-</div>
       </div>
-
       <div class="stat-box">
         <div class="stat-title">Lectura interna</div>
-        <div id="flowText" class="big">Esperando</div>
-        <div id="flowSub" style="margin-top: 8px; color: var(--muted);">0 alcistas · 0 bajistas · 0 en curso</div>
+        <div id="flowText" class="big">Mixto</div>
+        <div id="flowSub" style="margin-top:8px;color:var(--muted);font-size:14px;">0 alcistas · 0 bajistas · 0 en curso</div>
       </div>
     </div>
-
   </div>
 
-    <div class="time-row">
-      <div class="card clock-card">
-        <div class="clock" id="clock">00:00:00</div>
-        <div class="clock-sub" id="tzLabel">(local)</div>
-      </div>
-
-      <div class="card count-card">
-        <div class="time-compact-wrap">
-          <div class="time-5m-col">
-            <div class="time-5m-bar-shell">
-              <div id="bar5m" class="time-5m-bar-fill"></div>
-            </div>
-            <div id="time5mLabel" class="time-5m-label">05:00</div>
-          </div>
-
-          <div class="time-compact-info">
-            <div class="time-compact-title">Bloque actual</div>
-            <div id="timeText" class="time-compact-text">Minuto actual en curso</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div class="body-stack">
     <div class="card trade-panel">
-      <div>
+      <div class="trade-cell">
         <div class="trade-box-label">Balance</div>
         <div class="trade-box-value" id="tradeBalance">250.00 €</div>
       </div>
-      <div>
+      <div class="trade-cell">
         <div class="trade-box-label">Estado</div>
         <div class="trade-box-value trade-side-flat" id="tradeState">Sin posición</div>
       </div>
-      <div>
+      <div class="trade-cell">
         <div class="trade-box-label">Entrada</div>
         <div class="trade-box-value" id="tradeEntry">-</div>
       </div>
-      <div>
+      <div class="trade-cell">
         <div class="trade-box-label">Stop</div>
         <div class="trade-box-value" id="tradeStop">-</div>
       </div>
-      <div>
+      <div class="trade-cell">
         <div class="trade-box-label">Trailing</div>
         <div class="trade-box-value" id="tradeTrail">-</div>
       </div>
-      <div>
+      <div class="trade-cell">
         <div class="trade-box-label" id="tradePnlLabel">PnL abierto</div>
         <div class="trade-box-value" id="tradePnl">-</div>
       </div>
-      <div>
-        <button id="btnCloseTrade" class="mini-btn" type="button">Cerrar operación</button>
+    </div>
+
+    <div class="card visor-card">
+      <div class="visor-slot go">
+        <div class="visor-bar go"></div>
+        <div class="visor-light go"></div>
+        <div class="visor-label">GO</div>
+      </div>
+      <div class="visor-slot wait">
+        <div class="visor-bar wait"></div>
+        <div class="visor-light wait"></div>
+        <div class="visor-label">WAIT</div>
+      </div>
+      <div class="visor-slot no">
+        <div class="visor-bar no"></div>
+        <div class="visor-light no"></div>
+        <div class="visor-label">NO</div>
       </div>
     </div>
 
     <div class="card panel">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">VELA DE 5M EN CURSO</div>
-          <div class="panel-sub">Microestructura 1m dentro del bloque actual de 5 minutos</div>
+      <div class="micro-shell">
+        <div class="micro-wrap" id="microWrap">
+          <div class="minute-col" data-index="0">
+            <div class="minute-head"><span class="m-label">--:--</span></div>
+            <div class="minute-body"></div>
+          </div>
+          <div class="minute-col" data-index="1">
+            <div class="minute-head"><span class="m-label">--:--</span></div>
+            <div class="minute-body"></div>
+          </div>
+          <div class="minute-col" data-index="2">
+            <div class="minute-head"><span class="m-label">--:--</span></div>
+            <div class="minute-body"></div>
+          </div>
+          <div class="minute-col" data-index="3">
+            <div class="minute-head"><span class="m-label">--:--</span></div>
+            <div class="minute-body"></div>
+          </div>
+          <div class="minute-col" data-index="4">
+            <div class="minute-head"><span class="m-label">--:--</span></div>
+            <div class="minute-body"></div>
+          </div>
+          <div class="axis" id="axis"><div id="fivePreview" class="five-preview"></div></div>
         </div>
       </div>
 
-      <div class="risk-bar" id="riskBar">
-        <div class="risk-grid">
-          <label class="risk-item">
+      <div class="card micro-info-card" style="box-shadow:none;">
+        <div class="micro-info-head">
+          <div class="micro-title-chip">VELA DE 5M EN CURSO</div>
+          <div>→</div>
+          <div style="color:var(--muted);font-weight:700;">Microestructura 1m dentro del bloque actual de 5 minutos</div>
+        </div>
+
+        <div class="micro-info-grid">
+          <label class="micro-info-item">
             <span>Balance</span>
-            <input id="capitalInput" type="number" value="250" step="10" min="1" />
+            <input id="capitalInput" type="number" value="250" step="10" min="1" style="height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);padding:0 10px;outline:none;font-size:14px;" />
           </label>
-
-          <label class="risk-item">
+          <label class="micro-info-item">
             <span>Riesgo %</span>
-            <input id="riskPctInput" type="number" value="2" step="0.1" min="0.1" />
+            <input id="riskPctInput" type="number" value="2" step="0.1" min="0.1" style="height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--text);padding:0 10px;outline:none;font-size:14px;" />
           </label>
-
-          <div class="risk-item">
-            <span>Entry</span>
-            <strong id="entryValue">-</strong>
-          </div>
-
-          <div class="risk-item">
-            <span>Stop</span>
-            <strong id="stopValue">-</strong>
-          </div>
-
-          <div class="risk-item">
-            <span>Distancia</span>
-            <strong id="stopDistanceValue">-</strong>
-          </div>
-
-          <div class="risk-item">
-            <span>Size</span>
-            <strong id="sizeValue">-</strong>
-          </div>
-
-          <div class="risk-item">
-            <span>Riesgo €</span>
-            <strong id="riskAmountValue">-</strong>
-          </div>
-
-          <div class="risk-item">
-            <span>PnL</span>
-            <strong id="pnlValue" class="pnl-neutral">0.00 €</strong>
-          </div>
+          <div class="micro-info-item"><span>Entry</span><strong id="entryValue">-</strong></div>
+          <div class="micro-info-item"><span>Distancia</span><strong id="stopDistanceValue">-</strong></div>
+          <div class="micro-info-item"><span>Size</span><strong id="sizeValue">-</strong></div>
+          <div class="micro-info-item"><span>Riesgo €</span><strong id="riskAmountValue">-</strong></div>
+          <div class="micro-info-item"><span>PnL</span><strong id="pnlValue" class="pnl-neutral">0.00 €</strong></div>
         </div>
       </div>
 
-      <div class="micro-wrap" id="microWrap">
-        <div class="minute-col" data-index="0">
-          <div class="minute-head"><span class="m-label">--:--</span></div>
-          <div class="minute-body"></div>
-        </div>
-        <div class="minute-col" data-index="1">
-          <div class="minute-head"><span class="m-label">--:--</span></div>
-          <div class="minute-body"></div>
-        </div>
-        <div class="minute-col" data-index="2">
-          <div class="minute-head"><span class="m-label">--:--</span></div>
-          <div class="minute-body"></div>
-        </div>
-        <div class="minute-col" data-index="3">
-          <div class="minute-head"><span class="m-label">--:--</span></div>
-          <div class="minute-body"></div>
-        </div>
-        <div class="minute-col" data-index="4">
-          <div class="minute-head"><span class="m-label">--:--</span></div>
-          <div class="minute-body"></div>
-        </div>
-        <div class="axis" id="axis"><div id="fivePreview" class="five-preview"></div></div>
-      </div>
-
-      <div class="footer-row">
-        <div>
-          <div style="margin-bottom: 8px;">Progreso del minuto actual</div>
+      <div class="footer-row" style="margin-top:10px;">
+        <div class="card footer-progress-card" style="box-shadow:none;">
+          <div>Progreso del minuto actual</div>
           <div class="progress"><div id="minuteProgress"></div></div>
         </div>
-        <div id="serverState">Demo local en vivo</div>
-        <div id="latency">Latencia: 0ms</div>
-        <div id="nextMinute">Siguiente 1m en: 00:00</div>
+        <div class="status-box" id="serverState">Demo local en vivo</div>
+        <div class="status-box" id="latency">Latencia: 0ms</div>
+        <div class="status-box" id="nextMinute">Siguiente 1m en: 00:00</div>
       </div>
     </div>
 
-    <div class="card panel" id="historyPanel">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">HISTORIAL DE CIERRES</div>
-          <div class="panel-sub">Registro de operaciones cerradas</div>
-        </div>
-      </div>
-
-      <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse: collapse; font-size:14px;">
-          <thead>
-            <tr style="color: var(--muted); text-align:left; border-bottom:1px solid rgba(255,255,255,.08);">
-              <th style="padding:10px;">Hora</th>
-              <th style="padding:10px;">Símbolo</th>
-              <th style="padding:10px;">Side</th>
-              <th style="padding:10px;">Entry</th>
-              <th style="padding:10px;">Exit</th>
-              <th style="padding:10px;">PnL</th>
-            </tr>
-          </thead>
-          <tbody id="historyBody">
-            <tr>
-              <td colspan="6" style="padding:14px; color:var(--muted);">Sin cierres todavía</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="hidden-history">
+      <table><tbody id="historyBody"></tbody></table>
+      <button id="btnCloseTrade" class="mini-btn" type="button">Cerrar operación</button>
+      <strong id="stopValue">-</strong>
     </div>
+  </div>
+</div>
 
 <script>
-  // ========================================================
-  // 🧠 BLOQUE 1: ESTADO GLOBAL
-  // ========================================================
   const state = {
     lastPrice: 68000,
     minutes: [],
@@ -840,18 +993,15 @@
     XRPUSDT: { base: 0.6, vol: 0.05 }
   };
 
-  // ========================================================
-  // 🎛️ BLOQUE 2: REFERENCIAS UI
-  // ========================================================
   const ui = {
     btnLong: document.getElementById('btnLong'),
     btnShort: document.getElementById('btnShort'),
     btnCloseTrade: document.getElementById('btnCloseTrade'),
+    btnCloseTradeTop: document.getElementById('btnCloseTradeTop'),
     simBtn: document.getElementById('simBtn'),
     realBtn: document.getElementById('realBtn'),
     capitalInput: document.getElementById('capitalInput'),
     riskPctInput: document.getElementById('riskPctInput'),
-
     tradeState: document.getElementById('tradeState'),
     tradeEntry: document.getElementById('tradeEntry'),
     tradeStop: document.getElementById('tradeStop'),
@@ -859,108 +1009,68 @@
     tradePnl: document.getElementById('tradePnl'),
     tradePnlLabel: document.getElementById('tradePnlLabel'),
     tradeBalance: document.getElementById('tradeBalance'),
-
     entryValue: document.getElementById('entryValue'),
     stopValue: document.getElementById('stopValue'),
     stopDistanceValue: document.getElementById('stopDistanceValue'),
     sizeValue: document.getElementById('sizeValue'),
     riskAmountValue: document.getElementById('riskAmountValue'),
     pnlValue: document.getElementById('pnlValue'),
-
     symbolLabel: document.getElementById('symbolLabel'),
     historyBody: document.getElementById('historyBody'),
   };
 
-  // ========================================================
-  // 🧰 BLOQUE 3: HELPERS
-  // ========================================================
-  function pad(n) {
-    return String(n).padStart(2, '0');
-  }
-
+  function pad(n) { return String(n).padStart(2, '0'); }
   function fmtPrice(v) {
-    return Number(v).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    return Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-
-  function fmtMoney(v) {
-    return `${v >= 0 ? '+' : ''}${Number(v).toFixed(2)} €`;
-  }
-
-  function hhmm(date) {
-    return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-  }
-
+  function fmtMoney(v) { return `${v >= 0 ? '+' : ''}${Number(v).toFixed(2)} €`; }
+  function hhmm(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
   function getMinuteStart(date) {
-    return new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      0,
-      0
-    );
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), 0, 0);
   }
-
   function get5mStart(date) {
     const m = date.getMinutes() - (date.getMinutes() % 5);
-    return new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      date.getHours(),
-      m,
-      0,
-      0
-    );
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), m, 0, 0);
   }
-
-  function secondsToNextMinute(date) {
-    return 60 - date.getSeconds();
-  }
-
-  function secondsToNext5m(date) {
-    const minutesIntoBlock = date.getMinutes() % 5;
-    return (4 - minutesIntoBlock) * 60 + (60 - date.getSeconds());
-  }
-
   function classifyCandle(c) {
     if (!c) return 'neutral';
     if (c.close > c.open) return 'green';
     if (c.close < c.open) return 'red';
     return 'neutral';
   }
-
-  // ========================================================
-  // 📈 BLOQUE 4: MOTOR DE PRECIO Y VELAS
-  // ========================================================
-  function simulateTick() {
-  // const cfg = symbolConfig[symbol];
-  // const drift = (Math.random() - 0.5) * cfg.vol;
-  // const impulse = Math.sin(Date.now() / 5000) * (cfg.vol / 6);
-  // state.lastPrice = Math.max(0.0001, state.lastPrice + drift + impulse);
-  }
   
-async function getPrice() {
-  try {
-    const res = await fetch(`/price?symbol=${symbol}`);
-    const data = await res.json();
+  // ========================================================
+  // 🚦 BLOQUE 2: CEREBRO DEL SEMÁFORO
+  // ========================================================
+  function getDecision() {
+    const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
+    const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
 
-    const price = parseFloat(data.price);
-    if (!Number.isFinite(price)) {
-      throw new Error('Precio inválido recibido desde /price');
-    }
+    const delta = bullish - bearish;
 
-    state.lastPrice = price;
-    return state.lastPrice;
-  } catch (err) {
-    console.error("Error obteniendo precio:", err);
-    return NaN;
+    const now = new Date();
+    const sec = now.getSeconds();
+    const inExecutionZone = sec >= 40; // últimos 20s del minuto
+
+    if (delta >= 2 && inExecutionZone) return 'GO';
+    if (delta <= -2 && !inExecutionZone) return 'NO';
+
+    return 'WAIT';
   }
-}
+
+  async function getPrice() {
+    try {
+      const res = await fetch(`/price?symbol=${symbol}`);
+      const data = await res.json();
+      const price = parseFloat(data.price);
+      if (!Number.isFinite(price)) throw new Error('Precio inválido');
+      state.lastPrice = price;
+      return state.lastPrice;
+    } catch (err) {
+      console.error('Error obteniendo precio:', err);
+      return NaN;
+    }
+  }
 
   function ensureMinute(date) {
     const minuteStart = getMinuteStart(date).getTime();
@@ -984,81 +1094,53 @@ async function getPrice() {
       };
     }
 
-    state.minutes.forEach((m, idx) => {
-      if (m) m.live = idx === slot;
-    });
-
+    state.minutes.forEach((m, idx) => { if (m) m.live = idx === slot; });
     state.currentMinuteStart = minuteStart;
     return state.minutes[slot];
   }
 
-    async function updateData() {
-      const now = new Date();
-      const price = await getPrice();
-
-      if (!Number.isFinite(price)) return;
-
-      const minute = ensureMinute(now);
-      if (!minute) return;
-
-      minute.high = Math.max(minute.high, state.lastPrice);
-      minute.low = Math.min(minute.low, state.lastPrice);
-      minute.close = state.lastPrice;
-    }
-
-    function build5m() {
-      const filled = state.minutes.filter(m =>
-        m &&
-        Number.isFinite(m.open) &&
-        Number.isFinite(m.high) &&
-        Number.isFinite(m.low) &&
-        Number.isFinite(m.close)
-      );
-
-      if (!filled.length) return null;
-
-      return {
-        open: filled[0].open,
-        high: Math.max(...filled.map(m => m.high)),
-        low: Math.min(...filled.map(m => m.low)),
-        close: filled[filled.length - 1].close,
-      };
-    }
-
-function getRange() {
-  const filled = state.minutes.filter(m =>
-    m &&
-    Number.isFinite(m.low) &&
-    Number.isFinite(m.high)
-  );
-
-  if (!filled.length || !Number.isFinite(state.lastPrice)) {
-    return { min: 0, max: 100 };
+  async function updateData() {
+    const now = new Date();
+    const price = await getPrice();
+    if (!Number.isFinite(price)) return;
+    const minute = ensureMinute(now);
+    if (!minute) return;
+    minute.high = Math.max(minute.high, state.lastPrice);
+    minute.low = Math.min(minute.low, state.lastPrice);
+    minute.close = state.lastPrice;
   }
 
-  let min = Math.min(...filled.map(m => m.low));
-  let max = Math.max(...filled.map(m => m.high));
-
-  if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
-    min = state.lastPrice - 50;
-    max = state.lastPrice + 50;
+  function build5m() {
+    const filled = state.minutes.filter(m => m && [m.open,m.high,m.low,m.close].every(Number.isFinite));
+    if (!filled.length) return null;
+    return {
+      open: filled[0].open,
+      high: Math.max(...filled.map(m => m.high)),
+      low: Math.min(...filled.map(m => m.low)),
+      close: filled[filled.length - 1].close,
+    };
   }
 
-  const padRange = Math.max((max - min) * 0.14, 20);
-  return { min: min - padRange, max: max + padRange };
-}
+  function getRange() {
+    const filled = state.minutes.filter(m => m && Number.isFinite(m.low) && Number.isFinite(m.high));
+    if (!filled.length || !Number.isFinite(state.lastPrice)) return { min: 0, max: 100 };
+    let min = Math.min(...filled.map(m => m.low));
+    let max = Math.max(...filled.map(m => m.high));
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
+      min = state.lastPrice - 50;
+      max = state.lastPrice + 50;
+    }
+    const padRange = Math.max((max - min) * 0.14, 20);
+    return { min: min - padRange, max: max + padRange };
+  }
 
   function yScale(price, min, max, height) {
     return ((max - price) / (max - min)) * height;
   }
 
-  // ========================================================
-  // 🎨 BLOQUE 5: RENDER PRINCIPAL
-  // ========================================================
   function renderAxis(min, max) {
     const axis = document.getElementById('axis');
     axis.innerHTML = '<div id="fivePreview" class="five-preview"></div>';
-
     for (let i = 0; i < 5; i++) {
       const value = max - ((max - min) * i / 4);
       const div = document.createElement('div');
@@ -1071,11 +1153,9 @@ function getRange() {
   function renderFivePreview(min, max, data5) {
     const preview = document.getElementById('fivePreview');
     if (!preview || !data5) return;
-
     preview.innerHTML = '';
-    const h = preview.clientHeight || 340;
+    const h = preview.clientHeight || 314;
     const cls = data5.close > data5.open ? 'green' : data5.close < data5.open ? 'red' : 'neutral';
-
     const yHigh = yScale(data5.high, min, max, h);
     const yLow = yScale(data5.low, min, max, h);
     const yOpen = yScale(data5.open, min, max, h);
@@ -1097,47 +1177,23 @@ function getRange() {
     body.style.top = `${top}px`;
     body.style.height = `${bodyHeight}px`;
 
-    preview.appendChild(label);
-    preview.appendChild(wick);
-    preview.appendChild(body);
+    preview.append(label, wick, body);
   }
 
   function drawTradeOverlay(min, max) {
     const preview = document.getElementById('fivePreview');
     if (!preview || !trade.isOpen) return;
-
-    const h = preview.clientHeight || 340;
-
+    const h = preview.clientHeight || 314;
     const addLine = (price, color, label) => {
       if (!Number.isFinite(price)) return;
-
       const y = yScale(price, min, max, h);
-
       const line = document.createElement('div');
-      line.style.position = 'absolute';
-      line.style.left = '0';
-      line.style.right = '0';
-      line.style.top = `${y}px`;
-      line.style.height = '2px';
-      line.style.background = color;
-      line.style.opacity = '.95';
-
+      line.style.cssText = `position:absolute;left:0;right:0;top:${y}px;height:2px;background:${color};opacity:.95;`;
       const text = document.createElement('div');
       text.textContent = `${label} ${fmtPrice(price)}`;
-      text.style.position = 'absolute';
-      text.style.right = '6px';
-      text.style.top = `${Math.max(y - 10, 0)}px`;
-      text.style.fontSize = '11px';
-      text.style.fontWeight = '800';
-      text.style.color = color;
-      text.style.background = 'rgba(11,16,32,.7)';
-      text.style.padding = '2px 6px';
-      text.style.borderRadius = '999px';
-
-      preview.appendChild(line);
-      preview.appendChild(text);
+      text.style.cssText = `position:absolute;right:6px;top:${Math.max(y - 10, 0)}px;font-size:11px;font-weight:800;color:${color};background:rgba(11,16,32,.7);padding:2px 6px;border-radius:999px;`;
+      preview.append(line, text);
     };
-
     addLine(trade.entry, '#38bdf8', 'ENTRY');
     addLine(trade.stop, '#ef4444', 'STOP');
     addLine(trade.tp1, '#22c55e', 'TP1');
@@ -1148,19 +1204,17 @@ function getRange() {
     const wrap = document.getElementById('microWrap');
     const cols = wrap.querySelectorAll('.minute-col');
     const range = getRange();
-
     renderAxis(range.min, range.max);
     renderFivePreview(range.min, range.max, build5m());
 
     cols.forEach((col, idx) => {
       col.classList.remove('live-col');
-
       const body = col.querySelector('.minute-body');
       const head = col.querySelector('.minute-head');
       const label = col.querySelector('.m-label');
       body.innerHTML = '';
-
       const candle = state.minutes[idx];
+
       if (Number.isFinite(state.current5mStart)) {
         const labelTime = new Date(state.current5mStart + idx * 60000);
         label.textContent = hhmm(labelTime);
@@ -1168,38 +1222,25 @@ function getRange() {
         label.textContent = '--:--';
       }
       head.querySelector('.live-badge')?.remove();
-
       if (!candle) return;
 
       const cls = classifyCandle(candle);
+      if (candle.live) {
+        col.classList.add('live-col');
+        const badge = document.createElement('span');
+        badge.className = 'live-badge';
+        badge.textContent = 'EN CURSO';
+        head.appendChild(badge);
+        const secondScale = document.createElement('div');
+        secondScale.className = 'second-scale';
+        secondScale.innerHTML = '<span>00</span><span>15</span><span>30</span><span>45</span><span>60</span>';
+        const secondMarker = document.createElement('div');
+        secondMarker.className = 'second-marker';
+        secondMarker.style.left = `calc(${(new Date().getSeconds() / 60) * 100}% - 1px)`;
+        body.append(secondScale, secondMarker);
+      }
 
-    if (candle.live) {
-      col.classList.add('live-col');
-
-      const badge = document.createElement('span');
-      badge.className = 'live-badge';
-      badge.textContent = 'EN CURSO';
-      head.appendChild(badge);
-
-      const secondScale = document.createElement('div');
-      secondScale.className = 'second-scale';
-      secondScale.innerHTML = `
-        <span>00</span>
-        <span>15</span>
-        <span>30</span>
-        <span>45</span>
-        <span>60</span>
-      `;
-
-      const secondMarker = document.createElement('div');
-      secondMarker.className = 'second-marker';
-      secondMarker.style.left = `calc(${(new Date().getSeconds() / 60) * 100}% - 1px)`;
-
-      body.appendChild(secondScale);
-      body.appendChild(secondMarker);
-    }
-
-      const h = body.clientHeight || 340;
+      const h = body.clientHeight || 260;
       const yHigh = yScale(candle.high, range.min, range.max, h);
       const yLow = yScale(candle.low, range.min, range.max, h);
       const yOpen = yScale(candle.open, range.min, range.max, h);
@@ -1219,157 +1260,172 @@ function getRange() {
 
       const tag = document.createElement('div');
       tag.className = `price-tag ${cls}`;
-      tag.style.top = `${Math.max(yClose - 22, 6)}px`;
-      tag.textContent = `${candle.live ? 'P' : 'C'} ${fmtPrice(candle.close)}`;
+      tag.textContent = fmtPrice(candle.close);
 
-      body.appendChild(wick);
-      body.appendChild(candleDiv);
-      body.appendChild(tag);
+      body.append(wick, candleDiv, tag);
     });
 
     drawTradeOverlay(range.min, range.max);
   }
 
-    function renderStats() {
-      const data5 = build5m();
-
-      if (
-        !data5 ||
-        !Number.isFinite(data5.open) ||
-        !Number.isFinite(data5.high) ||
-        !Number.isFinite(data5.low) ||
-        !Number.isFinite(data5.close) ||
-        data5.open === 0
-      ) {
-        document.getElementById('o5').textContent = '-';
-        document.getElementById('h5').textContent = '-';
-        document.getElementById('l5').textContent = '-';
-        document.getElementById('c5').textContent = '-';
-        document.getElementById('change5').textContent = '-';
-        document.getElementById('changePct5').textContent = '-';
-        return;
-      }
-
-      const change = data5.close - data5.open;
-      const pct = (change / data5.open) * 100;
-
-      document.getElementById('o5').textContent = fmtPrice(data5.open);
-      document.getElementById('h5').textContent = fmtPrice(data5.high);
-      document.getElementById('l5').textContent = fmtPrice(data5.low);
-      document.getElementById('c5').textContent = fmtPrice(data5.close);
-
-      const changeEl = document.getElementById('change5');
-      const pctEl = document.getElementById('changePct5');
-
-      changeEl.textContent = `${change >= 0 ? '+' : ''}${fmtPrice(change)}`;
-      pctEl.textContent = `${change >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
-      changeEl.style.color = pctEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
-
-      const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
-      const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
-      const live = state.minutes.filter(m => m && m.live).length;
-
-      let flow = 'Mixto';
-      if (bullish >= 3 && bearish <= 1) flow = 'Sesgo alcista';
-      if (bearish >= 3 && bullish <= 1) flow = 'Sesgo bajista';
-      if (bullish === 5) flow = 'Impulso limpio';
-      if (bearish === 5) flow = 'Caída limpia';
-
-      document.getElementById('flowText').textContent = flow;
-      document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
+  function renderStats() {
+    const data5 = build5m();
+    if (!data5 || ![data5.open,data5.high,data5.low,data5.close].every(Number.isFinite) || data5.open === 0) {
+      document.getElementById('o5').textContent = '-';
+      document.getElementById('h5').textContent = '-';
+      document.getElementById('l5').textContent = '-';
+      document.getElementById('c5').textContent = '-';
+      document.getElementById('change5').textContent = '-';
+      document.getElementById('changePct5').textContent = '-';
+      return;
     }
 
-    function renderClock() {
-      const now = new Date();
+    const change = data5.close - data5.open;
+    const pct = (change / data5.open) * 100;
+    document.getElementById('o5').textContent = fmtPrice(data5.open);
+    document.getElementById('h5').textContent = fmtPrice(data5.high);
+    document.getElementById('l5').textContent = fmtPrice(data5.low);
+    document.getElementById('c5').textContent = fmtPrice(data5.close);
 
-      document.getElementById('clock').textContent =
-        `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const changeEl = document.getElementById('change5');
+    const pctEl = document.getElementById('changePct5');
+    changeEl.textContent = `${change >= 0 ? '+' : ''}${fmtPrice(change)}`;
+    pctEl.textContent = `${change >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+    changeEl.style.color = pctEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
 
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
-      document.getElementById('tzLabel').textContent = `(${tz})`;
+    const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
+    const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
+    const live = state.minutes.filter(m => m && m.live).length;
 
-      const sec = now.getSeconds();
-      const minIn5 = now.getMinutes() % 5;
+    let flow = 'Mixto';
+    if (bullish >= 3 && bearish <= 1) flow = 'Sesgo alcista';
+    if (bearish >= 3 && bullish <= 1) flow = 'Sesgo bajista';
+    if (bullish === 5) flow = 'Impulso limpio';
+    if (bearish === 5) flow = 'Caída limpia';
 
-      const secondsToNext1m = 60 - sec;
-      const secondsToNext5m = (4 - minIn5) * 60 + (60 - sec);
-
-      const progress1m = sec / 60;
-      const progress5m = ((minIn5 * 60) + sec) / 300;
-
-      const bar = document.getElementById('bar5m');
-      if (bar) {
-        bar.style.height = `${progress5m * 100}%`;
-      }
-
-      const time5mLabel = document.getElementById('time5mLabel');
-      if (time5mLabel) {
-        time5mLabel.textContent = `${Math.floor(secondsToNext5m / 60)}:${pad(secondsToNext5m % 60)}`;
-      }
-
-      const text = document.getElementById('timeText');
-      if (text) {
-        text.textContent = `1m en curso · ${secondsToNext1m}s restantes`;
-      }
-
-      document.getElementById('minuteProgress').style.width = `${progress1m * 100}%`;
-      document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${secondsToNext1m}s`;
+    document.getElementById('flowText').textContent = flow;
+    document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
+  }
+  
+  function renderStats() {
+    const data5 = build5m();
+    if (!data5 || ![data5.open,data5.high,data5.low,data5.close].every(Number.isFinite) || data5.open === 0) {
+      document.getElementById('o5').textContent = '-';
+      document.getElementById('h5').textContent = '-';
+      document.getElementById('l5').textContent = '-';
+      document.getElementById('c5').textContent = '-';
+      document.getElementById('change5').textContent = '-';
+      document.getElementById('changePct5').textContent = '-';
+      return;
     }
+
+    const change = data5.close - data5.open;
+    const pct = (change / data5.open) * 100;
+    document.getElementById('o5').textContent = fmtPrice(data5.open);
+    document.getElementById('h5').textContent = fmtPrice(data5.high);
+    document.getElementById('l5').textContent = fmtPrice(data5.low);
+    document.getElementById('c5').textContent = fmtPrice(data5.close);
+
+    const changeEl = document.getElementById('change5');
+    const pctEl = document.getElementById('changePct5');
+    changeEl.textContent = `${change >= 0 ? '+' : ''}${fmtPrice(change)}`;
+    pctEl.textContent = `${change >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+    changeEl.style.color = pctEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
+
+    const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
+    const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
+    const live = state.minutes.filter(m => m && m.live).length;
+
+    let flow = 'Mixto';
+    if (bullish >= 3 && bearish <= 1) flow = 'Sesgo alcista';
+    if (bearish >= 3 && bullish <= 1) flow = 'Sesgo bajista';
+    if (bullish === 5) flow = 'Impulso limpio';
+    if (bearish === 5) flow = 'Caída limpia';
+
+    document.getElementById('flowText').textContent = flow;
+    document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
+  }
+
+  // ========================================================
+  // 🎨 BLOQUE 3: RENDER DEL SEMÁFORO
+  // ========================================================
+  function renderSemaforo() {
+    const decision = getDecision();
+
+    const goSlot = document.querySelector('.visor-slot.go');
+    const waitSlot = document.querySelector('.visor-slot.wait');
+    const noSlot = document.querySelector('.visor-slot.no');
+
+    [goSlot, waitSlot, noSlot].forEach(el => el?.classList.remove('is-active'));
+
+    if (decision === 'GO') goSlot?.classList.add('is-active');
+    if (decision === 'WAIT') waitSlot?.classList.add('is-active');
+    if (decision === 'NO') noSlot?.classList.add('is-active');
+  }
+
+  function renderClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    document.getElementById('tzLabel').textContent = `(${tz})`;
+
+    const sec = now.getSeconds();
+    const minIn5 = now.getMinutes() % 5;
+    const secondsToNext1m = 60 - sec;
+    const secondsToNext5m = (4 - minIn5) * 60 + (60 - sec);
+    const progress1m = sec / 60;
+    const progress5m = ((minIn5 * 60) + sec) / 300;
+
+    document.getElementById('bar5m').style.height = `${progress5m * 100}%`;
+    document.getElementById('time5mLabel').textContent = `${Math.floor(secondsToNext5m / 60)}:${pad(secondsToNext5m % 60)}`;
+    document.getElementById('minuteProgress').style.width = `${progress1m * 100}%`;
+    document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${secondsToNext1m}s`;
+  }
+
+  function renderClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    document.getElementById('tzLabel').textContent = `(${tz})`;
+
+    const sec = now.getSeconds();
+    const minIn5 = now.getMinutes() % 5;
+    const secondsToNext1m = 60 - sec;
+    const secondsToNext5m = (4 - minIn5) * 60 + (60 - sec);
+    const progress1m = sec / 60;
+    const progress5m = ((minIn5 * 60) + sec) / 300;
+
+    document.getElementById('bar5m').style.height = `${progress5m * 100}%`;
+    document.getElementById('time5mLabel').textContent = `${Math.floor(secondsToNext5m / 60)}:${pad(secondsToNext5m % 60)}`;
+    document.getElementById('minuteProgress').style.width = `${progress1m * 100}%`;
+    document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${secondsToNext1m}s`;
+  }
 
   function renderMeta() {
-    document.getElementById('latency').textContent =
-      `Latencia: ${Math.floor(Math.random() * 30) + 12}ms`;
+    document.getElementById('latency').textContent = `Latencia: ${Math.floor(Math.random() * 30) + 12}ms`;
   }
 
   function renderHistory() {
     if (!ui.historyBody) return;
-
     if (!account.history.length) {
-      ui.historyBody.innerHTML = `
-        <tr>
-          <td colspan="6" style="padding:14px; color:var(--muted);">
-            Sin cierres todavía
-          </td>
-        </tr>
-      `;
+      ui.historyBody.innerHTML = '<tr><td colspan="6">Sin cierres todavía</td></tr>';
       return;
     }
-
-    ui.historyBody.innerHTML = account.history
-      .slice()
-      .reverse()
-      .map(row => `
-        <tr style="border-bottom:1px solid rgba(255,255,255,.06);">
-          <td style="padding:10px;">${row.time}</td>
-          <td style="padding:10px;">${row.symbol}</td>
-          <td style="padding:10px; color:${row.side === 'LONG' ? 'var(--green)' : 'var(--red)'};">
-            ${row.side}
-          </td>
-          <td style="padding:10px;">${fmtPrice(row.entry)}</td>
-          <td style="padding:10px;">${fmtPrice(row.exit)}</td>
-          <td style="padding:10px; color:${row.pnl >= 0 ? 'var(--green)' : 'var(--red)'};">
-            ${fmtMoney(row.pnl)}
-          </td>
-        </tr>
-      `)
-      .join('');
+    ui.historyBody.innerHTML = account.history.slice().reverse().map(row => `
+      <tr>
+        <td>${row.time}</td>
+        <td>${row.symbol}</td>
+        <td>${row.side}</td>
+        <td>${fmtPrice(row.entry)}</td>
+        <td>${fmtPrice(row.exit)}</td>
+        <td>${fmtMoney(row.pnl)}</td>
+      </tr>
+    `).join('');
   }
 
-  // ========================================================
-  // 💼 BLOQUE 6: MOTOR DE OPERACIONES
-  // ========================================================
-  function getRiskPct() {
-    return Number(ui.riskPctInput.value || 0);
-  }
-
-  function getCurrentCapital() {
-    return Math.max(account.balance, 0);
-  }
-
-  function getRiskAmount() {
-    return getCurrentCapital() * (getRiskPct() / 100);
-  }
-
+  function getRiskPct() { return Number(ui.riskPctInput.value || 0); }
+  function getCurrentCapital() { return Math.max(account.balance, 0); }
+  function getRiskAmount() { return getCurrentCapital() * (getRiskPct() / 100); }
   function getOpenPnl() {
     if (!trade.isOpen) return 0;
     if (trade.side === 'LONG') return (state.lastPrice - trade.entry) * trade.size;
@@ -1387,81 +1443,53 @@ function getRange() {
     ui.btnShort.classList.toggle('active-short', trade.isOpen && trade.side === 'SHORT');
   }
 
-    function openTrade(side) {
-      if (mode === 'REAL') {
-        alert('Modo REAL aún no conectado');
-        return;
-      }
-
-      if (trade.isOpen) return;
-
-      if (account.balance <= 0) {
-        alert('Balance insuficiente para abrir nuevas operaciones');
-        return;
-      }
-
-      const data5 = build5m();
-      const live = state.minutes.filter(Boolean).slice(-1)[0];
-
-      if (
-        !data5 ||
-        !live ||
-        !Number.isFinite(data5.low) ||
-        !Number.isFinite(data5.high) ||
-        !Number.isFinite(state.lastPrice)
-      ) {
-        return;
-      }
-
-      const riskAmount = getRiskAmount();
-      let stop = null;
-
-      if (side === 'LONG') stop = Math.min(live.low, data5.low);
-      else stop = Math.max(live.high, data5.high);
-
-      const entry = state.lastPrice;
-      const distance = Math.abs(entry - stop);
-
-      if (!Number.isFinite(distance) || distance <= 0) return;
-
-      const size = riskAmount / distance;
-
-      trade.isOpen = true;
-      trade.side = side;
-      trade.entry = entry;
-      trade.stop = stop;
-      trade.tp1 = side === 'LONG'
-        ? entry + Math.max((entry - stop) * 1.5, 8)
-        : entry - Math.max((stop - entry) * 1.5, 8);
-      trade.trail = stop;
-      trade.size = size;
-      trade.riskAmount = riskAmount;
-      trade.bestPrice = entry;
-      trade.openedAt = Date.now();
-
-      updateButtonStates();
-      renderTradePanel();
-      updateRiskBar();
+  function openTrade(side) {
+    if (mode === 'REAL') {
+      alert('Modo REAL aún no conectado');
+      return;
     }
+    if (trade.isOpen || account.balance <= 0) return;
+
+    const data5 = build5m();
+    const live = state.minutes.filter(Boolean).slice(-1)[0];
+    if (!data5 || !live || !Number.isFinite(data5.low) || !Number.isFinite(data5.high) || !Number.isFinite(state.lastPrice)) return;
+
+    const riskAmount = getRiskAmount();
+    const stop = side === 'LONG' ? Math.min(live.low, data5.low) : Math.max(live.high, data5.high);
+    const entry = state.lastPrice;
+    const distance = Math.abs(entry - stop);
+    if (!Number.isFinite(distance) || distance <= 0) return;
+
+    trade.isOpen = true;
+    trade.side = side;
+    trade.entry = entry;
+    trade.stop = stop;
+    trade.tp1 = side === 'LONG' ? entry + Math.max((entry - stop) * 1.5, 8) : entry - Math.max((stop - entry) * 1.5, 8);
+    trade.trail = stop;
+    trade.size = riskAmount / distance;
+    trade.riskAmount = riskAmount;
+    trade.bestPrice = entry;
+    trade.openedAt = Date.now();
+
+    updateButtonStates();
+    renderTradePanel();
+    updateRiskBar();
+  }
 
   function closeTrade() {
     if (trade.isOpen) {
       const pnl = getOpenPnl();
-
       account.realizedPnl += pnl;
       account.balance += pnl;
-
       account.history.push({
         side: trade.side,
         entry: trade.entry,
         exit: state.lastPrice,
-        pnl: pnl,
+        pnl,
         time: new Date().toLocaleTimeString(),
-        symbol: symbol
+        symbol
       });
-
       ui.capitalInput.value = account.balance.toFixed(2);
-      console.log('📒 HISTORIAL ACTUAL:', account.history);
     }
 
     trade.isOpen = false;
@@ -1483,10 +1511,8 @@ function getRange() {
 
   function updateTrailing() {
     if (!trade.isOpen) return;
-
     const live = state.minutes.filter(Boolean).slice(-1)[0];
     if (!live) return;
-
     if (trade.side === 'LONG') {
       trade.bestPrice = Math.max(trade.bestPrice, state.lastPrice);
       trade.trail = Math.max(trade.trail, live.low);
@@ -1499,82 +1525,55 @@ function getRange() {
   }
 
   function renderTradePanel() {
-    if (ui.tradeBalance) {
-      ui.tradeBalance.textContent = `${account.balance.toFixed(2)} €`;
-    }
-
+    ui.tradeBalance.textContent = `${account.balance.toFixed(2)} €`;
     if (!trade.isOpen) {
       ui.tradeState.textContent = 'Sin posición';
       ui.tradeState.className = 'trade-box-value trade-side-flat';
       ui.tradeEntry.textContent = '-';
       ui.tradeStop.textContent = '-';
       ui.tradeTrail.textContent = '-';
-
-      if (ui.tradePnlLabel) {
-        ui.tradePnlLabel.textContent = 'PnL realizado';
-      }
-
+      ui.tradePnlLabel.textContent = 'PnL realizado';
       ui.tradePnl.textContent = fmtMoney(account.realizedPnl);
-      ui.tradePnl.className =
-        'trade-box-value ' + (account.realizedPnl >= 0 ? 'trade-side-long' : 'trade-side-short');
+      ui.tradePnl.className = 'trade-box-value ' + (account.realizedPnl >= 0 ? 'trade-side-long' : 'trade-side-short');
       return;
     }
-
     const pnl = getOpenPnl();
-
     ui.tradeState.textContent = `${trade.side} activa`;
-    ui.tradeState.className =
-      'trade-box-value ' + (trade.side === 'LONG' ? 'trade-side-long' : 'trade-side-short');
-
+    ui.tradeState.className = 'trade-box-value ' + (trade.side === 'LONG' ? 'trade-side-long' : 'trade-side-short');
     ui.tradeEntry.textContent = fmtPrice(trade.entry);
     ui.tradeStop.textContent = fmtPrice(trade.stop);
     ui.tradeTrail.textContent = fmtPrice(trade.trail);
-
-    if (ui.tradePnlLabel) {
-      ui.tradePnlLabel.textContent = 'PnL abierto';
-    }
-
+    ui.tradePnlLabel.textContent = 'PnL abierto';
     ui.tradePnl.textContent = fmtMoney(pnl);
-    ui.tradePnl.className =
-      'trade-box-value ' + (pnl >= 0 ? 'trade-side-long' : 'trade-side-short');
+    ui.tradePnl.className = 'trade-box-value ' + (pnl >= 0 ? 'trade-side-long' : 'trade-side-short');
   }
 
   function updateRiskBar() {
     const currentCapital = getCurrentCapital();
     const riskAmount = currentCapital * (getRiskPct() / 100);
     ui.riskAmountValue.textContent = `${riskAmount.toFixed(2)} €`;
-
     if (!trade.isOpen) {
       ui.entryValue.textContent = '-';
-      ui.stopValue.textContent = '-';
       ui.stopDistanceValue.textContent = '-';
       ui.sizeValue.textContent = '-';
       ui.pnlValue.textContent = '0.00 €';
       ui.pnlValue.className = 'pnl-neutral';
       return;
     }
-
     const distance = Math.abs(trade.entry - trade.stop);
     const pnl = getOpenPnl();
-
     ui.entryValue.textContent = fmtPrice(trade.entry);
-    ui.stopValue.textContent = fmtPrice(trade.stop);
     ui.stopDistanceValue.textContent = distance.toFixed(2);
     ui.sizeValue.textContent = trade.size.toFixed(4);
     ui.pnlValue.textContent = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} €`;
     ui.pnlValue.className = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-neutral';
   }
 
-  // ========================================================
-  // 🎮 BLOQUE 7: EVENTOS
-  // ========================================================
   ui.capitalInput.addEventListener('change', () => {
     if (Number(ui.capitalInput.value) < 1) ui.capitalInput.value = 1;
-
     account.balance = Number(ui.capitalInput.value);
     account.realizedPnl = 0;
     account.history = [];
-
     renderTradePanel();
     updateRiskBar();
     renderHistory();
@@ -1585,56 +1584,43 @@ function getRange() {
   ui.btnLong.addEventListener('click', () => openTrade('LONG'));
   ui.btnShort.addEventListener('click', () => openTrade('SHORT'));
   ui.btnCloseTrade.addEventListener('click', closeTrade);
+  ui.btnCloseTradeTop.addEventListener('click', closeTrade);
 
-  // ========================================================
-  // 🛵 BLOQUE 8: SELECTOR DE SÍMBOLO
-  // ========================================================
   document.getElementById('symbolSelect').onchange = (e) => {
     symbol = e.target.value;
-
     state.lastPrice = symbolConfig[symbol].base;
     state.minutes = [];
     state.currentMinuteStart = null;
     state.current5mStart = null;
-
     if (trade.isOpen) closeTrade();
-
-    if (ui.symbolLabel) {
-      ui.symbolLabel.textContent = symbol;
-    }
+    ui.symbolLabel.textContent = symbol;
   };
 
-  // ========================================================
-  // ⏱️ BLOQUE 9: LOOP PRINCIPAL
-  // ========================================================
+    // ========================================================
+    // ⏱️ BLOQUE 5: LOOP PRINCIPAL
+    // ========================================================
     async function tick() {
       await updateData();
       updateTrailing();
       renderClock();
       renderCandles();
       renderStats();
+      renderSemaforo();
       renderMeta();
       renderTradePanel();
       updateRiskBar();
     }
 
   setMode('SIM');
-
-  if (ui.symbolLabel) {
-    ui.symbolLabel.textContent = symbol;
-  }
-
+  ui.symbolLabel.textContent = symbol;
   ui.capitalInput.value = account.balance.toFixed(2);
-
   renderTradePanel();
   updateRiskBar();
   renderHistory();
-
-    tick();
-    setInterval(() => {
-      tick();
-    }, 1000);
+  tick();
+  setInterval(tick, 1000);
+  
+  
 </script>
-</div>
 </body>
 </html>
