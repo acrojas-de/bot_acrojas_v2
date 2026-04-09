@@ -218,6 +218,10 @@ def get_spot_alerts(client):
                 alerts.append(f"⚠️ {p['asset']} {p['pnl_pct']}% | STOP LOSS")
 
         return alerts
+
+    except Exception as e:
+        print(f"Error alerts: {e}")
+        return []
         
 # ================================
 # 👉 🚀 ORDEN REAL MARKET
