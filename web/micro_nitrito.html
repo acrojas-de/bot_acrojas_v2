@@ -985,14 +985,6 @@
     openedAt: null,
   };
 
-  const symbolConfig = {
-    BTCUSDT: { base: 68000, vol: 12 },
-    ETHUSDT: { base: 3500, vol: 6 },
-    SOLUSDT: { base: 150, vol: 3 },
-    BNBUSDT: { base: 600, vol: 4 },
-    XRPUSDT: { base: 0.6, vol: 0.05 }
-  };
-
   const ui = {
     btnLong: document.getElementById('btnLong'),
     btnShort: document.getElementById('btnShort'),
@@ -1025,37 +1017,48 @@
   }
   function fmtMoney(v) { return `${v >= 0 ? '+' : ''}${Number(v).toFixed(2)} €`; }
   function hhmm(date) { return `${pad(date.getHours())}:${pad(date.getMinutes())}`; }
+
   function getMinuteStart(date) {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), 0, 0);
   }
+
   function get5mStart(date) {
     const m = date.getMinutes() - (date.getMinutes() % 5);
     return new Date(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), m, 0, 0);
   }
+
   function classifyCandle(c) {
     if (!c) return 'neutral';
     if (c.close > c.open) return 'green';
     if (c.close < c.open) return 'red';
     return 'neutral';
   }
-  
-  // ========================================================
-  // 🚦 BLOQUE 2: CEREBRO DEL SEMÁFORO
-  // ========================================================
+
   function getDecision() {
     const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
     const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
-
     const delta = bullish - bearish;
-
-    const now = new Date();
-    const sec = now.getSeconds();
-    const inExecutionZone = sec >= 40; // últimos 20s del minuto
+    const sec = new Date().getSeconds();
+    const inExecutionZone = sec >= 40;
 
     if (delta >= 2 && inExecutionZone) return 'GO';
     if (delta <= -2 && !inExecutionZone) return 'NO';
-
     return 'WAIT';
+  }
+
+  async function getBalance() {
+    try {
+      const res = await fetch('/api/balance');
+      const data = await res.json();
+
+      if (typeof data.total_usdt === 'number') {
+        account.balance = data.total_usdt;
+        ui.tradeBalance.textContent = `${data.total_usdt.toFixed(2)} €`;
+        ui.capitalInput.value = data.total_usdt.toFixed(2);
+      }
+    } catch (err) {
+      console.error('Error balance:', err);
+    }
   }
 
   async function getPrice() {
@@ -1103,15 +1106,17 @@
     const now = new Date();
     const price = await getPrice();
     if (!Number.isFinite(price)) return;
+
     const minute = ensureMinute(now);
     if (!minute) return;
+
     minute.high = Math.max(minute.high, state.lastPrice);
     minute.low = Math.min(minute.low, state.lastPrice);
     minute.close = state.lastPrice;
   }
 
   function build5m() {
-    const filled = state.minutes.filter(m => m && [m.open,m.high,m.low,m.close].every(Number.isFinite));
+    const filled = state.minutes.filter(m => m && [m.open, m.high, m.low, m.close].every(Number.isFinite));
     if (!filled.length) return null;
     return {
       open: filled[0].open,
@@ -1124,12 +1129,15 @@
   function getRange() {
     const filled = state.minutes.filter(m => m && Number.isFinite(m.low) && Number.isFinite(m.high));
     if (!filled.length || !Number.isFinite(state.lastPrice)) return { min: 0, max: 100 };
+
     let min = Math.min(...filled.map(m => m.low));
     let max = Math.max(...filled.map(m => m.high));
+
     if (!Number.isFinite(min) || !Number.isFinite(max) || min === max) {
       min = state.lastPrice - 50;
       max = state.lastPrice + 50;
     }
+
     const padRange = Math.max((max - min) * 0.14, 20);
     return { min: min - padRange, max: max + padRange };
   }
@@ -1141,6 +1149,7 @@
   function renderAxis(min, max) {
     const axis = document.getElementById('axis');
     axis.innerHTML = '<div id="fivePreview" class="five-preview"></div>';
+
     for (let i = 0; i < 5; i++) {
       const value = max - ((max - min) * i / 4);
       const div = document.createElement('div');
@@ -1153,15 +1162,15 @@
   function renderFivePreview(min, max, data5) {
     const preview = document.getElementById('fivePreview');
     if (!preview || !data5) return;
+
     preview.innerHTML = '';
     const h = preview.clientHeight || 314;
     const cls = data5.close > data5.open ? 'green' : data5.close < data5.open ? 'red' : 'neutral';
+
     const yHigh = yScale(data5.high, min, max, h);
     const yLow = yScale(data5.low, min, max, h);
     const yOpen = yScale(data5.open, min, max, h);
     const yClose = yScale(data5.close, min, max, h);
-    const top = Math.min(yOpen, yClose);
-    const bodyHeight = Math.max(Math.abs(yClose - yOpen), 8);
 
     const label = document.createElement('div');
     label.className = 'five-preview-label';
@@ -1174,8 +1183,8 @@
 
     const body = document.createElement('div');
     body.className = `five-preview-body ${cls}`;
-    body.style.top = `${top}px`;
-    body.style.height = `${bodyHeight}px`;
+    body.style.top = `${Math.min(yOpen, yClose)}px`;
+    body.style.height = `${Math.max(Math.abs(yClose - yOpen), 8)}px`;
 
     preview.append(label, wick, body);
   }
@@ -1183,17 +1192,23 @@
   function drawTradeOverlay(min, max) {
     const preview = document.getElementById('fivePreview');
     if (!preview || !trade.isOpen) return;
+
     const h = preview.clientHeight || 314;
+
     const addLine = (price, color, label) => {
       if (!Number.isFinite(price)) return;
       const y = yScale(price, min, max, h);
+
       const line = document.createElement('div');
       line.style.cssText = `position:absolute;left:0;right:0;top:${y}px;height:2px;background:${color};opacity:.95;`;
+
       const text = document.createElement('div');
       text.textContent = `${label} ${fmtPrice(price)}`;
       text.style.cssText = `position:absolute;right:6px;top:${Math.max(y - 10, 0)}px;font-size:11px;font-weight:800;color:${color};background:rgba(11,16,32,.7);padding:2px 6px;border-radius:999px;`;
+
       preview.append(line, text);
     };
+
     addLine(trade.entry, '#38bdf8', 'ENTRY');
     addLine(trade.stop, '#ef4444', 'STOP');
     addLine(trade.tp1, '#22c55e', 'TP1');
@@ -1204,6 +1219,7 @@
     const wrap = document.getElementById('microWrap');
     const cols = wrap.querySelectorAll('.minute-col');
     const range = getRange();
+
     renderAxis(range.min, range.max);
     renderFivePreview(range.min, range.max, build5m());
 
@@ -1213,30 +1229,35 @@
       const head = col.querySelector('.minute-head');
       const label = col.querySelector('.m-label');
       body.innerHTML = '';
+
       const candle = state.minutes[idx];
 
       if (Number.isFinite(state.current5mStart)) {
-        const labelTime = new Date(state.current5mStart + idx * 60000);
-        label.textContent = hhmm(labelTime);
+        label.textContent = hhmm(new Date(state.current5mStart + idx * 60000));
       } else {
         label.textContent = '--:--';
       }
+
       head.querySelector('.live-badge')?.remove();
       if (!candle) return;
 
       const cls = classifyCandle(candle);
+
       if (candle.live) {
         col.classList.add('live-col');
         const badge = document.createElement('span');
         badge.className = 'live-badge';
         badge.textContent = 'EN CURSO';
         head.appendChild(badge);
+
         const secondScale = document.createElement('div');
         secondScale.className = 'second-scale';
         secondScale.innerHTML = '<span>00</span><span>15</span><span>30</span><span>45</span><span>60</span>';
+
         const secondMarker = document.createElement('div');
         secondMarker.className = 'second-marker';
         secondMarker.style.left = `calc(${(new Date().getSeconds() / 60) * 100}% - 1px)`;
+
         body.append(secondScale, secondMarker);
       }
 
@@ -1245,8 +1266,6 @@
       const yLow = yScale(candle.low, range.min, range.max, h);
       const yOpen = yScale(candle.open, range.min, range.max, h);
       const yClose = yScale(candle.close, range.min, range.max, h);
-      const top = Math.min(yOpen, yClose);
-      const bodyHeight = Math.max(Math.abs(yClose - yOpen), 6);
 
       const wick = document.createElement('div');
       wick.className = `wick ${cls}`;
@@ -1255,8 +1274,8 @@
 
       const candleDiv = document.createElement('div');
       candleDiv.className = `candle ${cls}`;
-      candleDiv.style.top = `${top}px`;
-      candleDiv.style.height = `${bodyHeight}px`;
+      candleDiv.style.top = `${Math.min(yOpen, yClose)}px`;
+      candleDiv.style.height = `${Math.max(Math.abs(yClose - yOpen), 6)}px`;
 
       const tag = document.createElement('div');
       tag.className = `price-tag ${cls}`;
@@ -1270,7 +1289,7 @@
 
   function renderStats() {
     const data5 = build5m();
-    if (!data5 || ![data5.open,data5.high,data5.low,data5.close].every(Number.isFinite) || data5.open === 0) {
+    if (!data5 || ![data5.open, data5.high, data5.low, data5.close].every(Number.isFinite) || data5.open === 0) {
       document.getElementById('o5').textContent = '-';
       document.getElementById('h5').textContent = '-';
       document.getElementById('l5').textContent = '-';
@@ -1282,45 +1301,7 @@
 
     const change = data5.close - data5.open;
     const pct = (change / data5.open) * 100;
-    document.getElementById('o5').textContent = fmtPrice(data5.open);
-    document.getElementById('h5').textContent = fmtPrice(data5.high);
-    document.getElementById('l5').textContent = fmtPrice(data5.low);
-    document.getElementById('c5').textContent = fmtPrice(data5.close);
 
-    const changeEl = document.getElementById('change5');
-    const pctEl = document.getElementById('changePct5');
-    changeEl.textContent = `${change >= 0 ? '+' : ''}${fmtPrice(change)}`;
-    pctEl.textContent = `${change >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
-    changeEl.style.color = pctEl.style.color = change >= 0 ? 'var(--green)' : 'var(--red)';
-
-    const bullish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close > m.open).length;
-    const bearish = state.minutes.filter(m => m && Number.isFinite(m.open) && Number.isFinite(m.close) && m.close < m.open).length;
-    const live = state.minutes.filter(m => m && m.live).length;
-
-    let flow = 'Mixto';
-    if (bullish >= 3 && bearish <= 1) flow = 'Sesgo alcista';
-    if (bearish >= 3 && bullish <= 1) flow = 'Sesgo bajista';
-    if (bullish === 5) flow = 'Impulso limpio';
-    if (bearish === 5) flow = 'Caída limpia';
-
-    document.getElementById('flowText').textContent = flow;
-    document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
-  }
-  
-  function renderStats() {
-    const data5 = build5m();
-    if (!data5 || ![data5.open,data5.high,data5.low,data5.close].every(Number.isFinite) || data5.open === 0) {
-      document.getElementById('o5').textContent = '-';
-      document.getElementById('h5').textContent = '-';
-      document.getElementById('l5').textContent = '-';
-      document.getElementById('c5').textContent = '-';
-      document.getElementById('change5').textContent = '-';
-      document.getElementById('changePct5').textContent = '-';
-      return;
-    }
-
-    const change = data5.close - data5.open;
-    const pct = (change / data5.open) * 100;
     document.getElementById('o5').textContent = fmtPrice(data5.open);
     document.getElementById('h5').textContent = fmtPrice(data5.high);
     document.getElementById('l5').textContent = fmtPrice(data5.low);
@@ -1346,9 +1327,6 @@
     document.getElementById('flowSub').textContent = `${bullish} alcistas · ${bearish} bajistas · ${live} en curso`;
   }
 
-  // ========================================================
-  // 🎨 BLOQUE 3: RENDER DEL SEMÁFORO
-  // ========================================================
   function renderSemaforo() {
     const decision = getDecision();
 
@@ -1382,25 +1360,6 @@
     document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${secondsToNext1m}s`;
   }
 
-  function renderClock() {
-    const now = new Date();
-    document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
-    document.getElementById('tzLabel').textContent = `(${tz})`;
-
-    const sec = now.getSeconds();
-    const minIn5 = now.getMinutes() % 5;
-    const secondsToNext1m = 60 - sec;
-    const secondsToNext5m = (4 - minIn5) * 60 + (60 - sec);
-    const progress1m = sec / 60;
-    const progress5m = ((minIn5 * 60) + sec) / 300;
-
-    document.getElementById('bar5m').style.height = `${progress5m * 100}%`;
-    document.getElementById('time5mLabel').textContent = `${Math.floor(secondsToNext5m / 60)}:${pad(secondsToNext5m % 60)}`;
-    document.getElementById('minuteProgress').style.width = `${progress1m * 100}%`;
-    document.getElementById('nextMinute').textContent = `Siguiente 1m en: ${secondsToNext1m}s`;
-  }
-
   function renderMeta() {
     document.getElementById('latency').textContent = `Latencia: ${Math.floor(Math.random() * 30) + 12}ms`;
   }
@@ -1411,6 +1370,7 @@
       ui.historyBody.innerHTML = '<tr><td colspan="6">Sin cierres todavía</td></tr>';
       return;
     }
+
     ui.historyBody.innerHTML = account.history.slice().reverse().map(row => `
       <tr>
         <td>${row.time}</td>
@@ -1423,9 +1383,18 @@
     `).join('');
   }
 
-  function getRiskPct() { return Number(ui.riskPctInput.value || 0); }
-  function getCurrentCapital() { return Math.max(account.balance, 0); }
-  function getRiskAmount() { return getCurrentCapital() * (getRiskPct() / 100); }
+  function getRiskPct() {
+    return Number(ui.riskPctInput.value || 0);
+  }
+
+  function getCurrentCapital() {
+    return Math.max(account.balance, 0);
+  }
+
+  function getRiskAmount() {
+    return getCurrentCapital() * (getRiskPct() / 100);
+  }
+
   function getOpenPnl() {
     if (!trade.isOpen) return 0;
     if (trade.side === 'LONG') return (state.lastPrice - trade.entry) * trade.size;
@@ -1444,10 +1413,6 @@
   }
 
   function openTrade(side) {
-    if (mode === 'REAL') {
-      alert('Modo REAL aún no conectado');
-      return;
-    }
     if (trade.isOpen || account.balance <= 0) return;
 
     const data5 = build5m();
@@ -1464,7 +1429,9 @@
     trade.side = side;
     trade.entry = entry;
     trade.stop = stop;
-    trade.tp1 = side === 'LONG' ? entry + Math.max((entry - stop) * 1.5, 8) : entry - Math.max((stop - entry) * 1.5, 8);
+    trade.tp1 = side === 'LONG'
+      ? entry + Math.max((entry - stop) * 1.5, 8)
+      : entry - Math.max((stop - entry) * 1.5, 8);
     trade.trail = stop;
     trade.size = riskAmount / distance;
     trade.riskAmount = riskAmount;
@@ -1513,6 +1480,7 @@
     if (!trade.isOpen) return;
     const live = state.minutes.filter(Boolean).slice(-1)[0];
     if (!live) return;
+
     if (trade.side === 'LONG') {
       trade.bestPrice = Math.max(trade.bestPrice, state.lastPrice);
       trade.trail = Math.max(trade.trail, live.low);
@@ -1526,6 +1494,7 @@
 
   function renderTradePanel() {
     ui.tradeBalance.textContent = `${account.balance.toFixed(2)} €`;
+
     if (!trade.isOpen) {
       ui.tradeState.textContent = 'Sin posición';
       ui.tradeState.className = 'trade-box-value trade-side-flat';
@@ -1537,6 +1506,7 @@
       ui.tradePnl.className = 'trade-box-value ' + (account.realizedPnl >= 0 ? 'trade-side-long' : 'trade-side-short');
       return;
     }
+
     const pnl = getOpenPnl();
     ui.tradeState.textContent = `${trade.side} activa`;
     ui.tradeState.className = 'trade-box-value ' + (trade.side === 'LONG' ? 'trade-side-long' : 'trade-side-short');
@@ -1552,6 +1522,7 @@
     const currentCapital = getCurrentCapital();
     const riskAmount = currentCapital * (getRiskPct() / 100);
     ui.riskAmountValue.textContent = `${riskAmount.toFixed(2)} €`;
+
     if (!trade.isOpen) {
       ui.entryValue.textContent = '-';
       ui.stopDistanceValue.textContent = '-';
@@ -1560,6 +1531,7 @@
       ui.pnlValue.className = 'pnl-neutral';
       return;
     }
+
     const distance = Math.abs(trade.entry - trade.stop);
     const pnl = getOpenPnl();
     ui.entryValue.textContent = fmtPrice(trade.entry);
@@ -1596,20 +1568,18 @@
     ui.symbolLabel.textContent = symbol;
   };
 
-    // ========================================================
-    // ⏱️ BLOQUE 5: LOOP PRINCIPAL
-    // ========================================================
-    async function tick() {
-      await updateData();
-      updateTrailing();
-      renderClock();
-      renderCandles();
-      renderStats();
-      renderSemaforo();
-      renderMeta();
-      renderTradePanel();
-      updateRiskBar();
-    }
+  async function tick() {
+    await updateData();
+    await getBalance();
+    updateTrailing();
+    renderClock();
+    renderCandles();
+    renderStats();
+    renderSemaforo();
+    renderMeta();
+    renderTradePanel();
+    updateRiskBar();
+  }
 
   setMode('SIM');
   ui.symbolLabel.textContent = symbol;
@@ -1619,8 +1589,9 @@
   renderHistory();
   tick();
   setInterval(tick, 1000);
-  
-  
 </script>
+</body>
+</html>  Now is it ok?
+
 </body>
 </html>

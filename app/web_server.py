@@ -1,6 +1,8 @@
 import os
 import requests
 from flask import Flask, send_from_directory, jsonify, request
+from app.binance_client import get_spot_portfolio
+from app.bootstrap import bootstrap
 
 app = Flask(__name__)
 
@@ -40,6 +42,33 @@ def klines():
         r = requests.get(url, timeout=5)
         r.raise_for_status()
         return jsonify(r.json())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/balance")
+def api_balance():
+    try:
+        client, _ = bootstrap()
+        portfolio = get_spot_portfolio(client)
+
+        total = sum(float(p.get("value_usdt", 0) or 0) for p in portfolio)
+
+        usdt_free = 0.0
+        btc_qty = 0.0
+
+        for item in portfolio:
+            if item.get("asset") == "USDT":
+                usdt_free = float(item.get("quantity", 0) or 0)
+            elif item.get("asset") == "BTC":
+                btc_qty = float(item.get("quantity", 0) or 0)
+
+        return jsonify({
+            "total_usdt": round(total, 2),
+            "usdt_free": round(usdt_free, 2),
+            "btc_qty": round(btc_qty, 6),
+            "assets": portfolio
+        })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

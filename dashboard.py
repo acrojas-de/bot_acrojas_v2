@@ -24,7 +24,7 @@ st.set_page_config(page_title="Bot Acrojas", layout="wide")
 st.title("bot_acrojas_v2 🚀")
 
 st.markdown(
-    '[Abrir MICRO NITRITO 🚀](http://localhost:3000/micro)',
+    '[Abrir MICRO NITRITO 🚀](http://localhost:3000/micro',
     unsafe_allow_html=True
 )
 
