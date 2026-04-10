@@ -947,13 +947,56 @@
       </div>
     </div>
 
-    <div class="hidden-history">
-      <table><tbody id="historyBody"></tbody></table>
-      <button id="btnCloseTrade" class="mini-btn" type="button">Cerrar operación</button>
-      <strong id="stopValue">-</strong>
+    <div class="card" style="margin-top:14px; padding:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <div style="font-size:18px;font-weight:900;">📚 Historial de trades</div>
+        <button id="btnCloseTrade" class="mini-btn" type="button">Cerrar operación</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px;">
+        <div class="trade-cell">
+          <div class="trade-box-label">Total trades</div>
+          <div class="trade-box-value" id="statTotalTrades">0</div>
+        </div>
+        <div class="trade-cell">
+          <div class="trade-box-label">Ganadas</div>
+          <div class="trade-box-value trade-side-long" id="statWins">0</div>
+        </div>
+        <div class="trade-cell">
+          <div class="trade-box-label">Perdidas</div>
+          <div class="trade-box-value trade-side-short" id="statLosses">0</div>
+        </div>
+        <div class="trade-cell">
+          <div class="trade-box-label">Win rate</div>
+          <div class="trade-box-value" id="statWinRate">0.00%</div>
+        </div>
+        <div class="trade-cell">
+          <div class="trade-box-label">PnL neto</div>
+          <div class="trade-box-value" id="statNetPnl">0.00 €</div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <thead>
+            <tr style="color:var(--muted);text-align:left;border-bottom:1px solid rgba(255,255,255,.08);">
+              <th style="padding:10px 8px;">Hora</th>
+              <th style="padding:10px 8px;">Símbolo</th>
+              <th style="padding:10px 8px;">Side</th>
+              <th style="padding:10px 8px;">Entrada</th>
+              <th style="padding:10px 8px;">Salida</th>
+              <th style="padding:10px 8px;">PnL</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:10px;color:var(--muted);font-size:12px;">
+        Stop actual: <strong id="stopValue">-</strong>
+      </div>
     </div>
-  </div>
-</div>
+  </div>   
 
 <script>
   const state = {
@@ -1009,6 +1052,12 @@
     pnlValue: document.getElementById('pnlValue'),
     symbolLabel: document.getElementById('symbolLabel'),
     historyBody: document.getElementById('historyBody'),
+    statTotalTrades: document.getElementById('statTotalTrades'),
+    statWins: document.getElementById('statWins'),
+    statLosses: document.getElementById('statLosses'),
+    statWinRate: document.getElementById('statWinRate'),
+    statNetPnl: document.getElementById('statNetPnl'),
+    
   };
 
   function pad(n) { return String(n).padStart(2, '0'); }
@@ -1046,34 +1095,47 @@
     return 'WAIT';
   }
 
-  async function getBalance() {
-    try {
-      const res = await fetch('/api/balance');
-      const data = await res.json();
+async function getBalance() {
+  try {
+    const res = await fetch('/api/balance');
+    const data = await res.json();
 
-      if (typeof data.total_usdt === 'number') {
+    if (typeof data.total_usdt === 'number') {
+      if (mode === 'REAL') {
         account.balance = data.total_usdt;
-        ui.tradeBalance.textContent = `${data.total_usdt.toFixed(2)} €`;
         ui.capitalInput.value = data.total_usdt.toFixed(2);
       }
-    } catch (err) {
-      console.error('Error balance:', err);
-    }
-  }
 
-  async function getPrice() {
-    try {
-      const res = await fetch(`/price?symbol=${symbol}`);
-      const data = await res.json();
-      const price = parseFloat(data.price);
-      if (!Number.isFinite(price)) throw new Error('Precio inválido');
-      state.lastPrice = price;
-      return state.lastPrice;
-    } catch (err) {
-      console.error('Error obteniendo precio:', err);
-      return NaN;
+      ui.tradeBalance.textContent = `${account.balance.toFixed(2)} €`;
     }
+  } catch (err) {
+    console.error('Error balance:', err);
   }
+}
+
+async function getPrice() {
+  try {
+    const res = await fetch(`/price?symbol=${encodeURIComponent(symbol)}`);
+    const data = await res.json();
+
+    if (!data || data.error) {
+      console.error('Error obteniendo precio:', data?.error || 'Sin datos');
+      return state.lastPrice;
+    }
+
+    const price = Number(data.price);
+    if (!Number.isFinite(price) || price <= 0) {
+      console.error('Precio inválido recibido:', data);
+      return state.lastPrice;
+    }
+
+    state.lastPrice = price;
+    return state.lastPrice;
+  } catch (err) {
+    console.error('Error obteniendo precio:', err);
+    return state.lastPrice;
+  }
+}
 
   function ensureMinute(date) {
     const minuteStart = getMinuteStart(date).getTime();
@@ -1443,37 +1505,59 @@
     updateRiskBar();
   }
 
-  function closeTrade() {
-    if (trade.isOpen) {
-      const pnl = getOpenPnl();
-      account.realizedPnl += pnl;
-      account.balance += pnl;
-      account.history.push({
-        side: trade.side,
-        entry: trade.entry,
-        exit: state.lastPrice,
-        pnl,
-        time: new Date().toLocaleTimeString(),
-        symbol
-      });
-      ui.capitalInput.value = account.balance.toFixed(2);
+function closeTrade() {
+  if (trade.isOpen) {
+    const pnl = getOpenPnl();
+
+    if (!Number.isFinite(pnl)) {
+      console.error('PnL inválido al cerrar trade');
+      return;
     }
 
-    trade.isOpen = false;
-    trade.side = null;
-    trade.entry = null;
-    trade.stop = null;
-    trade.tp1 = null;
-    trade.trail = null;
-    trade.size = 0;
-    trade.riskAmount = 0;
-    trade.bestPrice = null;
-    trade.openedAt = null;
+    account.realizedPnl += pnl;
+    account.balance += pnl;
+    account.history.push({
+      side: trade.side,
+      entry: trade.entry,
+      exit: state.lastPrice,
+      pnl,
+      time: new Date().toLocaleTimeString(),
+      symbol
+    });
+    ui.capitalInput.value = account.balance.toFixed(2);
+  }
 
-    updateButtonStates();
-    renderTradePanel();
-    updateRiskBar();
-    renderHistory();
+  trade.isOpen = false;
+  trade.side = null;
+  trade.entry = null;
+  trade.stop = null;
+  trade.tp1 = null;
+  trade.trail = null;
+  trade.size = 0;
+  trade.riskAmount = 0;
+  trade.bestPrice = null;
+  trade.openedAt = null;
+
+  updateButtonStates();
+  renderTradePanel();
+  updateRiskBar();
+  renderHistory();
+  renderHistoryStats();
+}
+
+  function renderHistoryStats() {
+    const total = account.history.length;
+    const wins = account.history.filter(t => Number(t.pnl) > 0).length;
+    const losses = account.history.filter(t => Number(t.pnl) < 0).length;
+    const net = account.history.reduce((sum, t) => sum + Number(t.pnl || 0), 0);
+    const winRate = total > 0 ? (wins / total) * 100 : 0;
+
+    ui.statTotalTrades.textContent = total;
+    ui.statWins.textContent = wins;
+    ui.statLosses.textContent = losses;
+    ui.statWinRate.textContent = `${winRate.toFixed(2)}%`;
+    ui.statNetPnl.textContent = `${net >= 0 ? '+' : ''}${net.toFixed(2)} €`;
+    ui.statNetPnl.className = 'trade-box-value ' + (net >= 0 ? 'trade-side-long' : 'trade-side-short');
   }
 
   function updateTrailing() {
@@ -1541,15 +1625,12 @@
     ui.pnlValue.className = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-neutral';
   }
 
-  ui.capitalInput.addEventListener('change', () => {
-    if (Number(ui.capitalInput.value) < 1) ui.capitalInput.value = 1;
-    account.balance = Number(ui.capitalInput.value);
-    account.realizedPnl = 0;
-    account.history = [];
-    renderTradePanel();
-    updateRiskBar();
-    renderHistory();
-  });
+ui.capitalInput.addEventListener('change', () => {
+  if (Number(ui.capitalInput.value) < 1) ui.capitalInput.value = 1;
+  account.balance = Number(ui.capitalInput.value);
+  renderTradePanel();
+  updateRiskBar();
+});
 
   ui.simBtn.addEventListener('click', () => setMode('SIM'));
   ui.realBtn.addEventListener('click', () => setMode('REAL'));
@@ -1558,15 +1639,14 @@
   ui.btnCloseTrade.addEventListener('click', closeTrade);
   ui.btnCloseTradeTop.addEventListener('click', closeTrade);
 
-  document.getElementById('symbolSelect').onchange = (e) => {
-    symbol = e.target.value;
-    state.lastPrice = symbolConfig[symbol].base;
-    state.minutes = [];
-    state.currentMinuteStart = null;
-    state.current5mStart = null;
-    if (trade.isOpen) closeTrade();
-    ui.symbolLabel.textContent = symbol;
-  };
+    document.getElementById('symbolSelect').onchange = (e) => {
+      symbol = e.target.value;
+      state.minutes = [];
+      state.currentMinuteStart = null;
+      state.current5mStart = null;
+      if (trade.isOpen) closeTrade();
+      ui.symbolLabel.textContent = symbol;
+    };
 
   async function tick() {
     await updateData();
@@ -1587,11 +1667,14 @@
   renderTradePanel();
   updateRiskBar();
   renderHistory();
+  renderHistoryStats();
   tick();
   setInterval(tick, 1000);
+  
+    </div> <!-- body-stack -->
+  </div>  <!-- wrap -->
+
 </script>
 </body>
 </html>  Now is it ok?
 
-</body>
-</html>

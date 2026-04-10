@@ -10,29 +10,56 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 WEB_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "web"))
 
+
 @app.route("/")
 def home():
     return "Bot Acrojas activo 🚀"
+
 
 @app.route("/micro")
 def micro():
     return send_from_directory(WEB_DIR, "micro_nitrito.html")
 
+
 @app.route("/price")
 def price():
-    symbol = request.args.get("symbol", "BTCUSDT").upper()
+    symbol = request.args.get("symbol")
+
+    if not symbol or symbol in ["undefined", "null", "None", ""]:
+        symbol = "BTCUSDT"
+
+    symbol = symbol.upper()
     url = f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
 
     try:
         r = requests.get(url, timeout=5)
         r.raise_for_status()
-        return jsonify(r.json())
+        data = r.json()
+
+        if "price" not in data:
+            return jsonify({
+                "symbol": symbol,
+                "price": None,
+                "error": "Precio no disponible"
+            }), 200
+
+        return jsonify(data), 200
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "symbol": symbol,
+            "price": None,
+            "error": str(e)
+        }), 200
+
 
 @app.route("/klines")
 def klines():
-    symbol = request.args.get("symbol", "BTCUSDT").upper()
+    symbol = request.args.get("symbol")
+    if not symbol or symbol in ["undefined", "null", "None", ""]:
+        symbol = "BTCUSDT"
+    symbol = symbol.upper()
+
     interval = request.args.get("interval", "1m")
     limit = int(request.args.get("limit", 5))
 
@@ -41,9 +68,10 @@ def klines():
     try:
         r = requests.get(url, timeout=5)
         r.raise_for_status()
-        return jsonify(r.json())
+        return jsonify(r.json()), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify([]), 200
+
 
 @app.route("/api/balance")
 def api_balance():
@@ -67,10 +95,17 @@ def api_balance():
             "usdt_free": round(usdt_free, 2),
             "btc_qty": round(btc_qty, 6),
             "assets": portfolio
-        })
+        }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "total_usdt": 0.0,
+            "usdt_free": 0.0,
+            "btc_qty": 0.0,
+            "assets": [],
+            "error": str(e)
+        }), 200
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000, debug=True)
+    app.run(host="0.0.0.0", port=3000, debug=False, use_reloader=False)
